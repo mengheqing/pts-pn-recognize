@@ -1,0 +1,690 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>检测系统</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      font-family: Arial, "Microsoft YaHei", sans-serif;
+      background: #f5f5f5;
+    }
+
+    .page {
+      display: none;
+      width: 100%;
+      max-width: 430px;
+      height: 100dvh;
+      margin: 0 auto;
+      padding: 16px;
+      background: #ffffff;
+    }
+
+    .page.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1,
+    h2 {
+      margin: 0;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 24px;
+      line-height: 34px;
+    }
+
+    h2 {
+      font-size: 18px;
+      line-height: 24px;
+    }
+
+    .home-page {
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .home-info {
+      padding: 14px;
+      border-radius: 10px;
+      background: #f7f7f7;
+      color: #333;
+      font-size: 14px;
+      line-height: 24px;
+    }
+
+    .home-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    button {
+      height: 44px;
+      border: none;
+      border-radius: 8px;
+      background: #1677ff;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button:active {
+      opacity: 0.8;
+    }
+
+    button.green {
+      background: #16a34a;
+    }
+
+    button.gray {
+      background: #666;
+    }
+
+    button.danger {
+      background: #ff4d4f;
+    }
+
+    .detect-page {
+      gap: 10px;
+    }
+
+    .tip {
+      margin: 0;
+      padding: 8px;
+      font-size: 12px;
+      line-height: 18px;
+      color: #666;
+      background: #f7f7f7;
+      border-radius: 6px;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .preview-box {
+      width: 100%;
+      flex: 1;
+      min-height: 360px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .preview-frame {
+      height: 100%;
+      max-height: 100%;
+      aspect-ratio: 3 / 4;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    .empty-text {
+      color: #999;
+      font-size: 14px;
+    }
+
+    canvas {
+      display: none;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    #result {
+      height: 88px;
+      padding: 8px;
+      font-size: 13px;
+      line-height: 18px;
+      color: #333;
+      background: #fafafa;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    .camera-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.78);
+    }
+
+    .camera-modal.show {
+      display: flex;
+    }
+
+    .camera-panel {
+      width: 100%;
+      max-width: 390px;
+      background: #111;
+      border-radius: 14px;
+      overflow: hidden;
+      padding: 12px;
+    }
+
+    .camera-title {
+      margin: 0 0 10px;
+      color: #fff;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .camera-view-wrap {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    .camera-view {
+      width: min(100%, 330px);
+      aspect-ratio: 3 / 4;
+      background: #000;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    #video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .camera-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .history-page {
+      gap: 16px;
+    }
+
+    .blank-box {
+      flex: 1;
+      border: 1px dashed #ccc;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999;
+      font-size: 15px;
+    }
+
+    @media screen and (max-height: 760px) {
+      .tip {
+        display: none;
+      }
+
+      .preview-box {
+        min-height: 300px;
+      }
+
+      .camera-view {
+        width: min(100%, 280px);
+      }
+
+      #result {
+        height: 76px;
+      }
+
+      button {
+        height: 38px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page home-page active" id="homePage">
+    <h1>检测系统</h1>
+
+    <div class="home-info">
+      <div>当前时间：<span id="currentTime">获取中...</span></div>
+      <div>当前城市：<span id="currentCity">正在定位...</span></div>
+    </div>
+
+    <div class="home-buttons">
+      <button class="green" onclick="showPage('detectPage')">开始检测</button>
+      <button onclick="showPage('historyPage')">检测历史</button>
+      <button class="danger" onclick="exitApp()">退出程序</button>
+    </div>
+  </div>
+
+  <div class="page detect-page" id="detectPage">
+    <h2>拍照识别</h2>
+
+    <p class="tip">
+      点击“拍照”后打开竖向 3:4 摄像头窗口，确认拍摄后生成竖向 3:4 照片。
+    </p>
+
+    <p class="section-title">照片预览</p>
+
+    <div class="preview-box">
+      <div class="preview-frame">
+        <span class="empty-text" id="emptyText">暂无照片</span>
+        <img id="preview" alt="照片预览" />
+      </div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <div class="buttons">
+      <button onclick="openCameraModal()">拍照</button>
+      <button class="gray" onclick="resetPhoto()">重拍</button>
+      <button class="green" onclick="uploadPhoto()">上传并识别</button>
+      <button class="danger" onclick="showPage('homePage')">返回首页</button>
+    </div>
+
+    <p class="section-title">识别结果</p>
+    <div id="result">暂无结果</div>
+  </div>
+
+  <div class="page history-page" id="historyPage">
+    <h2>检测历史</h2>
+
+    <div class="blank-box">
+      检测历史页面待编辑
+    </div>
+
+    <button onclick="showPage('homePage')">返回首页</button>
+  </div>
+
+  <div class="camera-modal" id="cameraModal">
+    <div class="camera-panel">
+      <p class="camera-title">请拍摄照片</p>
+
+      <div class="camera-view-wrap">
+        <div class="camera-view">
+          <video id="video" autoplay playsinline></video>
+        </div>
+      </div>
+
+      <div class="camera-actions">
+        <button onclick="capturePhoto()">确认拍摄</button>
+        <button class="danger" onclick="closeCameraModal()">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const preview = document.getElementById("preview");
+    const emptyText = document.getElementById("emptyText");
+    const resultBox = document.getElementById("result");
+    const cameraModal = document.getElementById("cameraModal");
+    const currentTime = document.getElementById("currentTime");
+    const currentCity = document.getElementById("currentCity");
+
+    let stream = null;
+    let photoBlob = null;
+    let previewUrl = null;
+    let timeTimer = null;
+
+    function showPage(pageId) {
+      stopCamera();
+      cameraModal.classList.remove("show");
+
+      document.querySelectorAll(".page").forEach(function(page) {
+        page.classList.remove("active");
+      });
+
+      document.getElementById(pageId).classList.add("active");
+    }
+
+    function updateTime() {
+      const now = new Date();
+
+      currentTime.innerText = now.toLocaleString("zh-CN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+    }
+
+    function startClock() {
+      updateTime();
+      timeTimer = setInterval(updateTime, 1000);
+    }
+
+    function getCurrentCity() {
+      if (!navigator.geolocation) {
+        currentCity.innerText = "当前浏览器不支持定位";
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async function(position) {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+
+          currentCity.innerText = "定位成功，正在解析城市...";
+
+          try {
+            const city = await reverseGeocode(latitude, longitude);
+            currentCity.innerText = city;
+          } catch (error) {
+            currentCity.innerText = "城市解析失败";
+            console.error(error);
+          }
+        },
+        function(error) {
+          if (error.code === error.PERMISSION_DENIED) {
+            currentCity.innerText = "定位权限被拒绝";
+          } else if (error.code === error.POSITION_UNAVAILABLE) {
+            currentCity.innerText = "无法获取当前位置";
+          } else if (error.code === error.TIMEOUT) {
+            currentCity.innerText = "定位超时";
+          } else {
+            currentCity.innerText = "定位失败";
+          }
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
+        }
+      );
+    }
+
+    async function reverseGeocode(latitude, longitude) {
+      /*
+        这里需要接入地图服务商的逆地理编码接口。
+
+        推荐方案：
+        1. 高德地图 Web 服务 API
+        2. 腾讯位置服务 API
+        3. 百度地图 Web 服务 API
+
+        不建议直接把正式 key 暴露在前端。
+        生产环境建议：
+        前端传经纬度给你的后端，后端再调用地图 API。
+      */
+
+      return "请接入地图逆地理编码接口";
+    }
+
+    function exitApp() {
+      stopCamera();
+
+      window.close();
+
+      setTimeout(function() {
+        alert("浏览器通常不允许网页主动关闭。请使用系统返回或关闭浏览器标签页。");
+      }, 300);
+    }
+
+    async function openCameraModal() {
+      try {
+        resultBox.innerText = "正在打开摄像头...";
+        cameraModal.classList.add("show");
+
+        await startCamera();
+
+        resultBox.innerText = "摄像头已打开，请确认拍摄";
+      } catch (error) {
+        closeCameraModal();
+        handleCameraError(error);
+      }
+    }
+
+    async function startCamera() {
+      stopCamera();
+
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "environment",
+          width: { ideal: 3024 },
+          height: { ideal: 4032 },
+          aspectRatio: { ideal: 3 / 4 }
+        },
+        audio: false
+      });
+
+      video.srcObject = stream;
+
+      await new Promise(function(resolve) {
+        video.onloadedmetadata = function() {
+          video.play();
+          resolve();
+        };
+      });
+    }
+
+    function capturePhoto() {
+      if (!stream) {
+        alert("摄像头未打开");
+        return;
+      }
+
+      const sourceWidth = video.videoWidth;
+      const sourceHeight = video.videoHeight;
+
+      if (!sourceWidth || !sourceHeight) {
+        alert("摄像头画面还没准备好，请稍等一下");
+        return;
+      }
+
+      const targetRatio = 3 / 4;
+      const sourceRatio = sourceWidth / sourceHeight;
+
+      let cropX = 0;
+      let cropY = 0;
+      let cropWidth = sourceWidth;
+      let cropHeight = sourceHeight;
+
+      if (sourceRatio > targetRatio) {
+        cropWidth = sourceHeight * targetRatio;
+        cropX = (sourceWidth - cropWidth) / 2;
+      } else if (sourceRatio < targetRatio) {
+        cropHeight = sourceWidth / targetRatio;
+        cropY = (sourceHeight - cropHeight) / 2;
+      }
+
+      const outputWidth = Math.round(cropWidth);
+      const outputHeight = Math.round(cropHeight);
+
+      canvas.width = outputWidth;
+      canvas.height = outputHeight;
+
+      const context = canvas.getContext("2d");
+
+      context.drawImage(
+        video,
+        cropX,
+        cropY,
+        cropWidth,
+        cropHeight,
+        0,
+        0,
+        outputWidth,
+        outputHeight
+      );
+
+      canvas.toBlob(function(blob) {
+        if (!blob) {
+          resultBox.innerText = "拍照失败，请重试";
+          return;
+        }
+
+        photoBlob = blob;
+
+        if (previewUrl) {
+          URL.revokeObjectURL(previewUrl);
+        }
+
+        previewUrl = URL.createObjectURL(blob);
+        preview.src = previewUrl;
+        preview.style.display = "block";
+        emptyText.style.display = "none";
+
+        resultBox.innerText =
+          "拍照成功\n照片比例：3:4\n照片尺寸：" + outputWidth + " × " + outputHeight;
+
+        closeCameraModal();
+      }, "image/jpeg", 0.95);
+    }
+
+    function closeCameraModal() {
+      stopCamera();
+      cameraModal.classList.remove("show");
+    }
+
+    function stopCamera() {
+      if (stream) {
+        stream.getTracks().forEach(function(track) {
+          track.stop();
+        });
+
+        video.srcObject = null;
+        stream = null;
+      }
+    }
+
+    function resetPhoto() {
+      photoBlob = null;
+
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        previewUrl = null;
+      }
+
+      preview.removeAttribute("src");
+      preview.style.display = "none";
+      emptyText.style.display = "inline";
+
+      resultBox.innerText = "已清空照片，请重新拍照";
+    }
+
+    async function uploadPhoto() {
+      if (!photoBlob) {
+        alert("请先拍照");
+        return;
+      }
+
+      resultBox.innerText = "正在上传并识别...";
+
+      try {
+        const reader = new FileReader();
+
+        const base64 = await new Promise(function(resolve, reject) {
+          reader.onload = function() { resolve(reader.result); };
+          reader.onerror = function() { reject(new Error("图片读取失败")); };
+          reader.readAsDataURL(photoBlob);
+        });
+
+        const response = await fetch("/api/recognize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: base64 })
+        });
+
+        if (!response.ok) {
+          throw new Error("服务器响应异常：" + response.status);
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+          resultBox.innerText =
+            "识别结果：" + data.predicted_class +
+            "\n置信度：" + (data.confidence * 100).toFixed(2) + "%" +
+            "\nnegative: " + (data.probabilities.negative * 100).toFixed(2) + "%" +
+            "\npositive: " + (data.probabilities.positive * 100).toFixed(2) + "%";
+        } else {
+          resultBox.innerText = "识别失败：" + (data.error || "未知错误");
+        }
+
+        localStorage.setItem("lastResult", JSON.stringify(data));
+      } catch (error) {
+        console.error("上传或识别失败：", error);
+        resultBox.innerText = "上传或识别失败：" + error.message;
+      }
+    }
+
+    function handleCameraError(error) {
+      console.error("打开摄像头失败：", error);
+
+      if (error.name === "NotAllowedError") {
+        resultBox.innerText = "摄像头权限被拒绝，请在浏览器中允许摄像头权限。";
+      } else if (error.name === "NotFoundError") {
+        resultBox.innerText = "没有检测到摄像头设备。";
+      } else if (error.name === "NotReadableError") {
+        resultBox.innerText = "摄像头可能被其他程序占用。";
+      } else {
+        resultBox.innerText = "无法打开摄像头：" + error.message;
+      }
+    }
+
+    window.addEventListener("beforeunload", function() {
+      stopCamera();
+
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    });
+
+    document.addEventListener("visibilitychange", function() {
+      if (document.hidden) {
+        stopCamera();
+        cameraModal.classList.remove("show");
+      }
+    });
+
+    startClock();
+    getCurrentCity();
+
+    const lastResult = localStorage.getItem("lastResult");
+
+    if (lastResult) {
+      resultBox.innerText = "上一次识别结果：\n" + lastResult;
+    }
+  </script>
+</body>
+</html>
