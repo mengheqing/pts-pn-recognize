@@ -424,26 +424,26 @@
           elements.permissionTitle.innerText = "摄像头权限被拒绝";
           bodyHtml = "请检查以下事项以确保摄像头正常工作：\n";
           bodyHtml += "<ul>";
-          bodyHtml += "<li>操作系统"设置 > 隐私 > 相机"中允许浏览器访问摄像头</li>";
-          bodyHtml += "<li>浏览器站点权限：地址栏左侧锁图标 > 网站权限 > 摄像头设为"允许"</li>";
+          bodyHtml += '<li>操作系统\u201C设置 > 隐私 > 相机\u201D中允许浏览器访问摄像头</li>';
+          bodyHtml += '<li>浏览器站点权限：地址栏左侧锁图标 > 网站权限 > 摄像头设为\u201C允许\u201D</li>';
           if (!isHTTPS) {
-            bodyHtml += "<li><strong>当前页面未使用 HTTPS</strong>，部分浏览器要求安全连接才能调用摄像头</li>";
+            bodyHtml += '<li><strong>当前页面未使用 HTTPS</strong>，部分浏览器要求安全连接才能调用摄像头</li>';
           }
-          bodyHtml += "<li>确认没有其他应用正在占用摄像头</li>";
-          bodyHtml += "</ul>";
-          bodyHtml += "\n完成设置后，请点击下方"重新授权"按钮重试。";
+          bodyHtml += '<li>确认没有其他应用正在占用摄像头</li>';
+          bodyHtml += '</ul>';
+          bodyHtml += '\n完成设置后，请点击下方\u201C重新授权\u201D按钮重试。';
         } else {
           elements.permissionTitle.innerText = "定位权限被拒绝";
           bodyHtml = "请检查以下事项以确保获取位置：\n";
           bodyHtml += "<ul>";
-          bodyHtml += "<li>操作系统"设置 > 隐私 > 位置"中允许浏览器获取位置</li>";
-          bodyHtml += "<li>浏览器站点权限：地址栏左侧锁图标 > 网站权限 > 位置设为"允许"</li>";
+          bodyHtml += '<li>操作系统\u201C设置 > 隐私 > 位置\u201D中允许浏览器获取位置</li>';
+          bodyHtml += '<li>浏览器站点权限：地址栏左侧锁图标 > 网站权限 > 位置设为\u201C允许\u201D</li>';
           if (!isHTTPS) {
-            bodyHtml += "<li><strong>当前页面未使用 HTTPS</strong>，部分浏览器要求安全连接才能获取位置</li>";
+            bodyHtml += '<li><strong>当前页面未使用 HTTPS</strong>，部分浏览器要求安全连接才能获取位置</li>';
           }
-          bodyHtml += "<li>确保设备定位服务已开启（GPS/Wi-Fi）</li>";
-          bodyHtml += "</ul>";
-          bodyHtml += "\n完成设置后，请点击下方"重新授权"按钮重试。";
+          bodyHtml += '<li>确保设备定位服务已开启（GPS/Wi-Fi）</li>';
+          bodyHtml += '</ul>';
+          bodyHtml += '\n完成设置后，请点击下方\u201C重新授权\u201D按钮重试。';
         }
 
         elements.permissionBody.innerHTML = bodyHtml;
