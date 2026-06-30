@@ -263,6 +263,7 @@ if __name__ == '__main__':
     # img_path = sys.argv[1]
     # m_dir = sys.argv[2] if len(sys.argv) > 2 else 'model'
     img_path = "/Users/mengheqing/PycharmProjects/pts-pn-recognize/dataset/test/negative/0007.png"
+    # 换用相对路径
     m_dir = "./model/"
 
     output = recognize(img_path, model_dir=m_dir)
