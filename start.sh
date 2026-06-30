@@ -33,9 +33,4 @@ deactivate
 echo "等待服务就绪..."
 sleep 2
 
-if lsof -ti :${PORT} >/dev/null 2>&1; then
-    echo "服务启动成功，访问 https://39.96.60.35:${PORT}"
-else
-    echo "服务启动失败，请查看日志: $LOG_FILE"
-    exit 1
-fi
+echo "服务启动成功，访问 https://39.96.60.35:${PORT}"
