@@ -42,5 +42,10 @@ def api_recognize():
 
 
 if __name__ == '__main__':
-    # 使用10086端口
-    app.run(host='0.0.0.0', port=10086, debug=False)
+    import os
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    ssl_context = (
+        os.path.join(base_dir, 'cert.pem'),
+        os.path.join(base_dir, 'key.pem'),
+    )
+    app.run(host='0.0.0.0', port=10086, debug=False, ssl_context=ssl_context)
