@@ -672,7 +672,7 @@
             setResult(
               "识别结果：" + data.predicted_class +
               "\n置信度：" + (data.confidence * 100).toFixed(2) + "%" +
-              "\n\nnegative: " + (data.probabilities.negative * 100).toFixed(2) + "%" +
+              "\nnegative: " + (data.probabilities.negative * 100).toFixed(2) + "%" +
               "\npositive: " + (data.probabilities.positive * 100).toFixed(2) + "%"
             );
           } else {
