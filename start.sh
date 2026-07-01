@@ -21,14 +21,14 @@ else
 fi
 
 echo "[3/5] 激活虚拟环境..."
-source venv/bin/activate
+. venv/bin/activate
 
 echo "[4/5] 启动服务..."
 nohup python app.py >> "$LOG_FILE" 2>&1 &
 echo "已启动，PID: $!"
 
 echo "[5/5] 退出虚拟环境..."
-deactivate
+deactivate 2>/dev/null || true
 
 echo "等待服务就绪..."
 sleep 2

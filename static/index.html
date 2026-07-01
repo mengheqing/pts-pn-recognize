@@ -148,11 +148,32 @@
     .buttons button, .camera-actions button { height:48px; font-size:15px; }
 
     #result {
-      height:96px; padding:14px; font-size:14px; line-height:22px; color:#1e3a8a;
+      height:160px; padding:14px; font-size:14px; line-height:22px; color:#1e3a8a;
       background:rgba(255,255,255,0.8); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
       border:1px solid rgba(147,197,253,0.5); border-radius:20px; overflow-y:auto;
       white-space:pre-wrap; box-shadow:var(--shadow-sm);
     }
+
+    /* 加载遮罩 */
+    .loading-overlay {
+      position:fixed; inset:0; z-index:2000;
+      display:none; align-items:center; justify-content:center;
+      background:rgba(15,23,42,0.45); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    }
+    .loading-overlay.show { display:flex; }
+    .loading-card {
+      display:flex; flex-direction:column; align-items:center; gap:16px;
+      padding:32px 40px; border-radius:24px;
+      background:rgba(255,255,255,0.92); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+      box-shadow:0 20px 60px rgba(15,23,42,0.25);
+    }
+    .spinner {
+      width:40px; height:40px;
+      border:4px solid rgba(37,99,235,0.2); border-top-color:var(--primary);
+      border-radius:50%; animation:spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .loading-text { font-size:14px; color:#1e293b; font-weight:600; text-align:center; }
 
     /* 全局权限引导浮层 */
     .permission-overlay {
@@ -247,7 +268,7 @@
       .tip { display:none; }
       .preview-box { min-height:0; }
       .camera-view { width:min(100%,280px); }
-      #result { height:78px; }
+      #result { height:120px; }
       button { height:42px; font-size:14px; }
       .buttons button, .camera-actions button { height:42px; }
     }
@@ -285,8 +306,8 @@
     <h2>拍照识别</h2>
 
     <p class="tip">
-      点击"拍照"后打开摄像头窗口开始拍照<br>
-      拍摄后点击"上传并识别"开始归类。
+      点击"拍照"打开摄像头拍摄，或点击"选择图片"从本地选取<br>
+      点击"上传并识别"开始检测和归类。
     </p>
 
     <p class="section-title">照片预览</p>
@@ -302,11 +323,12 @@
 
     <div class="buttons">
       <button type="button" data-action="open-camera">拍照</button>
-      <button class="gray" type="button" data-action="reset-photo">重拍</button>
+      <button class="gray" type="button" data-action="select-local">选择图片</button>
       <button class="green" type="button" data-action="save-photo">保存到本地</button>
-      <button class="green" type="button" data-action="upload-photo">上传并识别</button>
+      <button class="green" type="button" data-action="upload-photo" id="uploadBtn">上传并识别</button>
       <button class="danger wide" type="button" data-action="show-page" data-page="homePage">返回首页</button>
     </div>
+    <input type="file" id="fileInput" accept="image/*" style="display:none" />
 
     <p class="section-title">识别结果</p>
     <div id="result">暂无结果</div>
@@ -336,6 +358,14 @@
     </div>
   </div>
 
+  <!-- 加载遮罩 -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-card">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loadingText">正在识别中...</div>
+    </div>
+  </div>
+
   <!-- 全局权限引导浮层 -->
   <div class="permission-overlay" id="globalPermissionOverlay">
     <div class="permission-dialog">
@@ -351,7 +381,8 @@
   <script>
     (function() {
       var CONFIG = {
-        apiEndpoint: "/api/recognize",
+        yoloEndpoint: "/api/yolo-recognize",
+        recognizeEndpoint: "/api/recognize",
         historyKey: "detectHistory",
         maxHistoryItems: 20,
         cameraRatio: 3 / 4,
@@ -375,7 +406,11 @@
         historyEmpty: document.getElementById("historyEmpty"),
         globalOverlay: document.getElementById("globalPermissionOverlay"),
         permissionTitle: document.getElementById("permissionTitle"),
-        permissionBody: document.getElementById("permissionBody")
+        permissionBody: document.getElementById("permissionBody"),
+        fileInput: document.getElementById("fileInput"),
+        uploadBtn: document.getElementById("uploadBtn"),
+        loadingOverlay: document.getElementById("loadingOverlay"),
+        loadingText: document.getElementById("loadingText")
       };
 
       var state = {
@@ -617,7 +652,40 @@
         elements.preview.removeAttribute("src");
         elements.preview.style.display = "none";
         elements.emptyText.style.display = "inline";
-        setResult("已清空照片，请重新拍照");
+        setResult("已清空照片，请重新拍照或选择图片");
+      }
+
+      function selectLocalImage() {
+        elements.fileInput.click();
+      }
+
+      function handleFileSelected(e) {
+        var file = e.target.files && e.target.files[0];
+        if (!file) return;
+        if (!file.type.startsWith("image/")) {
+          alert("请选择图片文件");
+          return;
+        }
+        state.photoBlob = file;
+        updatePreview(file);
+        setResult("已选择图片：" + file.name);
+        elements.fileInput.value = "";
+      }
+
+      // ------ 加载状态 ------
+      function showLoading(text) {
+        elements.loadingText.innerText = text || "正在识别中...";
+        elements.loadingOverlay.classList.add("show");
+        elements.uploadBtn.disabled = true;
+      }
+
+      function updateLoadingText(text) {
+        elements.loadingText.innerText = text;
+      }
+
+      function hideLoading() {
+        elements.loadingOverlay.classList.remove("show");
+        elements.uploadBtn.disabled = false;
       }
 
       function savePhotoToLocal() {
@@ -644,47 +712,123 @@
 
       // ------ 上传识别 ------
       async function uploadPhoto() {
-        if (!state.photoBlob) { alert("请先拍照"); return; }
+        if (!state.photoBlob) { alert("请先拍照或选择图片"); return; }
         if (state.isUploading) return;
         state.isUploading = true;
-        setResult("正在上传并识别...");
+        showLoading("步骤 1/2：YOLO 检测中...");
+        setResult("正在上传并识别...\n步骤 1/2：YOLO 检测中...");
 
         try {
-          var reader = new FileReader();
+          var base64 = await blobToBase64(state.photoBlob);
 
-          var base64 = await new Promise(function(resolve, reject) {
-            reader.onload = function() { resolve(reader.result); };
-            reader.onerror = function() { reject(new Error("图片读取失败")); };
-            reader.readAsDataURL(state.photoBlob);
-          });
-
-          var res = await fetch(CONFIG.apiEndpoint, {
+          // Step 1: YOLO 检测
+          var yoloRes = await fetch(CONFIG.yoloEndpoint, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ image: base64 })
           });
 
-          if (!res.ok) throw new Error("服务器响应异常：" + res.status);
+          if (!yoloRes.ok) throw new Error("YOLO 服务响应异常：" + yoloRes.status);
+          var yoloData = await yoloRes.json();
 
-          var data = await res.json();
-
-          if (data.success) {
-            setResult(
-              "识别结果：" + data.predicted_class +
-              "\n置信度：" + (data.confidence * 100).toFixed(2) + "%" +
-              "\nnegative: " + (data.probabilities.negative * 100).toFixed(2) + "%" +
-              "\npositive: " + (data.probabilities.positive * 100).toFixed(2) + "%"
-            );
-          } else {
-            setResult("识别失败：" + (data.error || "未知错误"));
+          if (!yoloData.success) {
+            setResult("YOLO 检测失败：" + (yoloData.error || "未知错误"));
+            return;
           }
 
-          saveHistory(data);
+          if (!yoloData.pairs || yoloData.pairs.length === 0) {
+            var msg = yoloData.message || "未检测到目标";
+            setResult(
+              "YOLO 检测完成\n" +
+              "检测框：" + yoloData.total_detections + " (QR: " + yoloData.qr_count + ", PTS: " + yoloData.pts_count + ")\n" +
+              msg
+            );
+            saveHistory({ yolo: yoloData, pairs: [] });
+            return;
+          }
+
+          updateLoadingText("步骤 2/2：分类识别中 (0/" + yoloData.pairs.length + ")");
+          var lines = [];
+          lines.push("YOLO 检测完成，共 " + yoloData.pairs.length + " 对");
+          lines.push("---");
+
+          // Step 2: 逐个调用 /api/recognize 识别裁剪图
+          for (var i = 0; i < yoloData.pairs.length; i++) {
+            var pair = yoloData.pairs[i];
+            lines.push("[" + (i + 1) + "/" + yoloData.pairs.length + "] " + pair.qr_text);
+
+            if (!pair.qr_decode_success) {
+              lines.push("  二维码解码失败");
+              lines.push("");
+              appendResult(lines.join("\n"));
+              lines = [];
+              continue;
+            }
+
+            updateLoadingText("步骤 2/2：分类识别中 (" + (i + 1) + "/" + yoloData.pairs.length + ")");
+
+            try {
+              var cropBase64 = await fetchCropImage(pair.pts_image_url);
+              var recRes = await fetch(CONFIG.recognizeEndpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ image: cropBase64 })
+              });
+
+              if (!recRes.ok) throw new Error("识别服务响应异常：" + recRes.status);
+              var recData = await recRes.json();
+
+              if (recData.success) {
+                lines.push("  分类：" + recData.predicted_class + "  置信度：" + (recData.confidence * 100).toFixed(1) + "%");
+                lines.push("  negative: " + (recData.probabilities.negative * 100).toFixed(1) + "%  positive: " + (recData.probabilities.positive * 100).toFixed(1) + "%");
+              } else {
+                lines.push("  识别失败：" + (recData.error || "未知错误"));
+              }
+
+              pair.recognizeResult = recData;
+            } catch (err) {
+              lines.push("  识别请求失败：" + err.message);
+            }
+
+            lines.push("");
+            appendResult(lines.join("\n"));
+            lines = [];
+          }
+
+          saveHistory({ yolo: yoloData, pairs: yoloData.pairs });
+
         } catch (err) {
           setResult("上传或识别失败：" + err.message);
         } finally {
           state.isUploading = false;
+          hideLoading();
         }
+      }
+
+      function blobToBase64(blob) {
+        return new Promise(function(resolve, reject) {
+          var reader = new FileReader();
+          reader.onload = function() { resolve(reader.result); };
+          reader.onerror = function() { reject(new Error("图片读取失败")); };
+          reader.readAsDataURL(blob);
+        });
+      }
+
+      async function fetchCropImage(url) {
+        var res = await fetch(url);
+        if (!res.ok) throw new Error("获取裁剪图失败：" + res.status);
+        var blob = await res.blob();
+        return blobToBase64(blob);
+      }
+
+      function appendResult(text) {
+        var current = elements.resultBox.innerText;
+        if (current && current !== "暂无结果") {
+          elements.resultBox.innerText = current + "\n" + text;
+        } else {
+          elements.resultBox.innerText = text;
+        }
+        elements.resultBox.scrollTop = elements.resultBox.scrollHeight;
       }
 
       // ------ 历史记录 ------
@@ -706,11 +850,25 @@
         arr.forEach(function(item) {
           var li = document.createElement("li");
           li.className = "history-item";
-          var r = item.result;
           var text = item.time;
-          if (r && r.success) {
+          var r = item.result;
+          if (r && r.yolo) {
+            var yolo = r.yolo;
+            text += "\n检测：" + yolo.total_detections + " 框 (QR: " + yolo.qr_count + ", PTS: " + yolo.pts_count + ")";
+            if (r.pairs && r.pairs.length > 0) {
+              r.pairs.forEach(function(p, idx) {
+                text += "\n  " + (idx + 1) + ". " + p.qr_text;
+                if (p.recognizeResult && p.recognizeResult.success) {
+                  text += " -> " + p.recognizeResult.predicted_class + " (" + (p.recognizeResult.confidence * 100).toFixed(1) + "%)";
+                } else if (p.recognizeResult) {
+                  text += " -> 识别失败";
+                }
+              });
+            } else {
+              text += "\n  " + (yolo.message || "无配对");
+            }
+          } else if (r && r.success) {
             text += "\n结果：" + r.predicted_class + "  置信度：" + (r.confidence * 100).toFixed(2) + "%";
-            text += "\nnegative: " + (r.probabilities.negative * 100).toFixed(2) + "%  positive: " + (r.probabilities.positive * 100).toFixed(2) + "%";
           } else if (r) {
             text += "\n识别失败：" + (r.error || "未知错误");
           }
@@ -743,6 +901,7 @@
         if (action === "show-page") showPage(btn.dataset.page);
         else if (action === "exit") { stopCamera(); window.close(); setTimeout(function() { alert("请手动关闭标签页"); }, 300); }
         else if (action === "open-camera") openCameraModal();
+        else if (action === "select-local") selectLocalImage();
         else if (action === "reset-photo") resetPhoto();
         else if (action === "save-photo") savePhotoToLocal();
         else if (action === "upload-photo") uploadPhoto();
@@ -765,6 +924,7 @@
 
       function init() {
         document.addEventListener("click", handleAction);
+        elements.fileInput.addEventListener("change", handleFileSelected);
         window.addEventListener("beforeunload", cleanup);
         document.addEventListener("visibilitychange", function() { if (document.hidden) closeCameraModal(); });
         startClock();
