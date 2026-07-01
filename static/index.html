@@ -532,7 +532,7 @@
         var clsClass = cls === "positive" ? "cls-positive" : "cls-negative";
         var text = cls;
         if (showConfidence) text += ' (' + (confidence * 100).toFixed(1) + '%)';
-        return '<span class="' + clsClass + '">' + text + '</span>';
+        return '<span class="' + clsClass + '">' + cls + '</span>';
       }
 
       function buildResultTable(pairs, showConfidence) {
