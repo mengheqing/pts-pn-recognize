@@ -530,7 +530,7 @@
 
       function clsSpan(cls, confidence) {
         var clsClass = cls === "positive" ? "cls-positive" : "cls-negative";
-        return '<span class="' + clsClass + '">' + cls + ' (' + (confidence * 100).toFixed(1) + '%)</span>';
+        return '<span class="' + clsClass + '">' + cls + '</span>';
       }
 
       function buildResultTable(pairs) {
