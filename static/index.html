@@ -626,7 +626,8 @@
         if (!navigator.geolocation) {
           elements.currentLatitude.innerText = "纬度：浏览器不支持";
           elements.currentLongitude.innerText = "经度：浏览器不支持";
-          fallbackIPLocation();
+          elements.currentCity.innerText = "Unknown";
+          state.city = "Unknown";
           return;
         }
 
@@ -637,10 +638,11 @@
             var msg = messages[err.code] || "定位失败";
             elements.currentLatitude.innerText = "纬度：" + msg;
             elements.currentLongitude.innerText = "经度：" + msg;
+            elements.currentCity.innerText = "Unknown";
+            state.city = "Unknown";
             if (err.code === 1) {
               showPermissionGuide("location");
             }
-            fallbackIPLocation();
           },
           { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
         );
@@ -657,40 +659,20 @@
         elements.currentCity.innerText = "正在解析城市...";
 
         try {
-          state.city = await reverseGeocode(lat, lng);
-          elements.currentCity.innerText = state.city;
-        } catch (e) {
-          console.error(e);
-          fallbackIPLocation();
-        }
-      }
-
-      async function fallbackIPLocation() {
-        elements.currentCity.innerText = "正在通过IP定位...";
-        try {
-          var res = await fetch("https://pv.sohu.com/cityjson?ie=utf-8");
-          var text = await res.text();
-          var m = text.match(/"cname"\s*:\s*"([^"]+)"/);
-          if (m && m[1]) {
-            state.city = m[1];
-            elements.currentCity.innerText = state.city + " (IP定位)";
+          var res = await fetch("/api/reverse-geocode?lat=" + encodeURIComponent(lat) + "&lng=" + encodeURIComponent(lng));
+          var data = await res.json();
+          if (data.success) {
+            state.city = data.address;
+            elements.currentCity.innerText = state.city;
           } else {
-            elements.currentCity.innerText = "城市解析失败";
+            state.city = "Unknown";
+            elements.currentCity.innerText = "Unknown";
           }
         } catch (e) {
-          console.error("IP定位失败：", e);
-          elements.currentCity.innerText = "城市解析失败";
+          console.error(e);
+          state.city = "Unknown";
+          elements.currentCity.innerText = "Unknown";
         }
-      }
-
-      async function reverseGeocode(lat, lng) {
-        var url = "https://nominatim.openstreetmap.org/reverse?format=json&lat=" +
-          encodeURIComponent(lat) + "&lon=" + encodeURIComponent(lng) + "&accept-language=zh-CN";
-        var res = await fetch(url);
-        if (!res.ok) throw new Error("逆地理编码请求失败");
-        var data = await res.json();
-        var addr = data.address || {};
-        return addr.city || addr.town || addr.village || addr.county || addr.state || "未知城市";
       }
 
       // ------ 摄像头 ------

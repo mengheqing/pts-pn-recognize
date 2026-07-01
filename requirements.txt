@@ -6,3 +6,4 @@ ultralytics==8.4.83
 opencv-python-headless==4.13.0.92
 pyzbar==0.1.9
 scipy==1.15.3
+certifi
