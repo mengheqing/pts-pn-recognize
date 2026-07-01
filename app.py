@@ -4,6 +4,9 @@ import base64
 import tempfile
 import threading
 import time
+import urllib.request
+import urllib.parse
+import ssl
 
 from flask import Flask, request, jsonify, send_from_directory
 from recognize import recognize
@@ -74,6 +77,54 @@ def api_yolo_recognize():
 @app.route('/api/crops/<path:filename>')
 def serve_crop(filename):
     return send_from_directory(TEMP_CROPS_DIR, filename)
+
+
+GEO_APPCODE = '64269fbca2f643c5bd390e45a66dd075'
+GEO_API_URL = 'https://dizhi.market.alicloudapi.com/location_address'
+
+_geo_ssl_context = None
+
+
+def _get_geo_ssl_context():
+    global _geo_ssl_context
+    if _geo_ssl_context is not None:
+        return _geo_ssl_context
+    try:
+        import certifi
+        _geo_ssl_context = ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        _geo_ssl_context = ssl.create_default_context()
+    return _geo_ssl_context
+
+
+@app.route('/api/reverse-geocode')
+def api_reverse_geocode():
+    lat = request.args.get('lat', '').strip()
+    lng = request.args.get('lng', '').strip()
+    if not lat or not lng:
+        return jsonify({'success': False, 'error': '缺少 lat 或 lng 参数'}), 400
+
+    qs = urllib.parse.urlencode({'lng': lng, 'lat': lat, 'from': '1'})
+    url = GEO_API_URL + '?' + qs
+
+    req = urllib.request.Request(url, headers={'Authorization': 'APPCODE ' + GEO_APPCODE})
+
+    try:
+        with urllib.request.urlopen(req, timeout=10, context=_get_geo_ssl_context()) as resp:
+            data = json.loads(resp.read().decode('utf-8'))
+    except Exception as e:
+        return jsonify({'success': False, 'error': '逆地理编码请求失败: ' + str(e)})
+
+    body = data.get('showapi_res_body', {})
+    if body.get('ret_code') != 0:
+        return jsonify({'success': False, 'error': body.get('msg', '查询失败')})
+
+    addr = body.get('addressComponent', {})
+    province = addr.get('province', '')
+    city = addr.get('city', '')
+    address = (province + city).strip() or 'Unknown'
+
+    return jsonify({'success': True, 'address': address})
 
 
 def _cleanup_loop():
