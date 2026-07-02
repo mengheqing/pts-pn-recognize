@@ -35,12 +35,7 @@ def normalize_model_name(model_name):
     if model_name.startswith('model_'):
         model_name = model_name[6:]
     name_map = {
-        'mobilenetv3_large': 'mobilenetv3_large_100',
-        'mobilenetv3_small': 'mobilenetv3_small_100',
         'densenet121': 'densenet121',
-        'resnet50': 'resnet50',
-        'efficientnet_b0': 'efficientnet_b0',
-        'swin_tiny_patch4_window7_224': 'swin_tiny_patch4_window7_224',
     }
     return name_map.get(model_name, model_name)
 
@@ -251,20 +246,3 @@ def recognize(image_path, model_dir='model', device=None, ensemble_mode='soft'):
     }
 
     return json.dumps(result, ensure_ascii=False, indent=2)
-
-
-if __name__ == '__main__':
-    # import sys
-    #
-    # if len(sys.argv) < 2:
-    #     print('用法: python recognize.py <图片路径> [模型目录]')
-    #     sys.exit(1)
-    #
-    # img_path = sys.argv[1]
-    # m_dir = sys.argv[2] if len(sys.argv) > 2 else 'model'
-    img_path = "/Users/mengheqing/PycharmProjects/pts-pn-recognize/dataset/test/negative/0007.png"
-    # 换用相对路径
-    m_dir = "./model/"
-
-    output = recognize(img_path, model_dir=m_dir)
-    print(output)
