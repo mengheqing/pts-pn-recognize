@@ -93,6 +93,16 @@
       background:rgba(255,255,255,0.85); border:1px solid rgba(203,213,225,0.6);
       box-shadow:var(--shadow-sm);
     }
+    .time-lines {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      width: 100%;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
 
     .location-lines { display:flex; flex-direction:column; gap:6px; align-items:center; justify-content:center; }
 
@@ -923,9 +933,25 @@
 
       // ------ 时间与定位 ------
       function updateTime() {
-        elements.currentTime.innerText = new Date().toLocaleString(t.locale, {
-          year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit"
+        var now = new Date();
+
+        var dateText = now.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit"
         });
+
+        var timeText = now.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
+        });
+
+        elements.currentTime.innerHTML =
+          '<div class="time-lines">' +
+            '<div>' + dateText + '</div>' +
+            '<div>' + timeText + '</div>' +
+          '</div>';
       }
 
       function startClock() {
