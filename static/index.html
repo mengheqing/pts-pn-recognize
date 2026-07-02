@@ -485,6 +485,7 @@
           btn_clear: "清除历史",
           btn_back_history: "返回历史",
           camera_title: "请拍摄照片",
+          tip_detect: "点击\u201C拍照\u201D打开摄像头拍摄，或点击\u201C选择图片\u201D从本地选取\n点击\u201C上传并识别\u201D开始检测和归类。",
           btn_confirm_capture: "确认拍摄",
           btn_cancel: "取消",
           btn_retry_perm: "重新授权",
@@ -585,6 +586,7 @@
           btn_clear: "Clear History",
           btn_back_history: "Back to History",
           camera_title: "Capture Image",
+          tip_detect: "Tap \"Capture\" to open the camera, or tap \"Select Image\" to choose a local image\nTap \"Upload and Analyze\" to start detection and classification.",
           btn_confirm_capture: "Confirm Image",
           btn_cancel: "Cancel",
           btn_retry_perm: "Retry Permission",
@@ -734,6 +736,7 @@
         document.getElementById("emptyText").innerText = t.empty_photo;
         document.getElementById("historyEmpty").innerText = t.no_history;
         document.getElementById("camera_title").innerText = t.camera_title;
+        document.getElementById("tip_detect").innerHTML = t.tip_detect.replace(/\n/g, "<br>");
 
         document.getElementById("btn_start").innerText = t.btn_start;
         document.getElementById("btn_history").innerText = t.btn_history;
