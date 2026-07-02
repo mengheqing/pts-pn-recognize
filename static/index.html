@@ -155,12 +155,6 @@
       box-shadow:var(--shadow-sm);
     }
 
-    #result:empty::before {
-      content: "暂无结果";
-      display:flex; align-items:center; justify-content:center;
-      height:80px; color:#64748b; font-size:14px;
-    }
-
     .result-table {
       width:100%; border-collapse:collapse; font-size:14px;
     }
@@ -321,6 +315,16 @@
       border:1px solid rgba(147,197,253,0.5); box-shadow:var(--shadow-sm);
     }
 
+    .lang-switch {
+      position:fixed; bottom:16px; right:16px; z-index:900;
+      min-width:44px; height:36px; border-radius:18px; border:none;
+      background:rgba(255,255,255,0.85); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+      color:#2563eb; font-size:13px; font-weight:700; cursor:pointer;
+      box-shadow:0 4px 16px rgba(0,0,0,0.1); transition:all 0.2s ease;
+      padding:0 14px;
+    }
+    .lang-switch:active { transform:scale(0.95); opacity:0.85; }
+
     @media screen and (max-height:760px) {
       .page { padding-top:calc(12px + env(safe-area-inset-top)); padding-bottom:calc(12px + env(safe-area-inset-bottom)); }
       .tip { display:none; }
@@ -334,99 +338,96 @@
 
 <body>
   <div class="page home-page active" id="homePage">
-    <h1>检测系统</h1>
+    <h1 id="title_home"></h1>
 
     <div class="home-info">
-      <div class="info-cell info-label">当前时间</div>
-      <div class="info-cell info-value" id="currentTime">获取中...</div>
+      <div class="info-cell info-label" id="label_time"></div>
+      <div class="info-cell info-value" id="currentTime"></div>
 
-      <div class="info-cell info-label">当前位置</div>
+      <div class="info-cell info-label" id="label_location"></div>
       <div class="info-cell info-value">
         <div class="location-lines">
-          <div id="currentLatitude">纬度：正在获取...</div>
-          <div id="currentLongitude">经度：正在获取...</div>
+          <div id="currentLatitude"></div>
+          <div id="currentLongitude"></div>
         </div>
       </div>
 
-      <div class="info-cell info-label">所在城市</div>
-      <div class="info-cell info-value" id="currentCity">正在获取城市...</div>
+      <div class="info-cell info-label" id="label_city"></div>
+      <div class="info-cell info-value" id="currentCity"></div>
     </div>
 
     <div class="home-buttons">
-      <button class="green" type="button" data-action="show-page" data-page="detectPage">开始检测</button>
-      <button type="button" data-action="show-page" data-page="historyPage">检测历史</button>
-      <button class="danger" type="button" data-action="exit">退出程序</button>
+      <button class="green" type="button" data-action="show-page" data-page="detectPage" id="btn_start"></button>
+      <button type="button" data-action="show-page" data-page="historyPage" id="btn_history"></button>
+      <button class="danger" type="button" data-action="exit" id="btn_exit"></button>
     </div>
   </div>
 
   <div class="page detect-page" id="detectPage">
-    <h2>拍照识别</h2>
+    <h2 id="title_detect"></h2>
 
-    <p class="tip">
-      点击"拍照"打开摄像头拍摄，或点击"选择图片"从本地选取<br>
-      点击"上传并识别"开始检测和归类。
-    </p>
+    <p class="tip" id="tip_detect"></p>
 
-    <p class="section-title">照片预览</p>
+    <p class="section-title" id="label_preview"></p>
 
     <div class="preview-box">
       <div class="preview-frame">
-        <span class="empty-text" id="emptyText">暂无照片</span>
-        <img id="preview" alt="照片预览" />
+        <span class="empty-text" id="emptyText"></span>
+        <img id="preview" alt="" />
       </div>
     </div>
 
     <canvas id="canvas"></canvas>
 
     <div class="buttons">
-      <button type="button" data-action="open-camera">拍照</button>
-      <button class="gray" type="button" data-action="select-local">选择图片</button>
-      <button class="green" type="button" data-action="save-photo">保存到本地</button>
-      <button class="green" type="button" data-action="upload-photo" id="uploadBtn">上传并识别</button>
-      <button class="danger wide" type="button" data-action="show-page" data-page="homePage">返回首页</button>
+      <button type="button" data-action="open-camera" id="btn_capture"></button>
+      <button class="gray" type="button" data-action="select-local" id="btn_select"></button>
+      <button class="green" type="button" data-action="save-photo" id="btn_save"></button>
+      <button class="green" type="button" data-action="upload-photo" id="uploadBtn"></button>
+      <button class="danger wide" type="button" data-action="show-page" data-page="homePage" id="btn_back_home"></button>
     </div>
     <input type="file" id="fileInput" accept="image/*" style="display:none" />
 
-    <p class="section-title">识别结果</p>
+    <p class="section-title" id="label_result"></p>
     <div id="result"></div>
   </div>
 
   <div class="page history-page" id="historyPage">
-    <h2>检测历史</h2>
+    <h2 id="title_history"></h2>
 
     <ul class="history-list" id="historyList"></ul>
-    <div class="blank-box" id="historyEmpty">暂无检测历史</div>
+    <div class="blank-box" id="historyEmpty"></div>
 
     <div class="history-actions">
-      <button type="button" data-action="export-history">导出到本地</button>
-      <button class="danger" type="button" data-action="clear-history">清除历史</button>
-      <button class="gray" type="button" data-action="show-page" data-page="homePage">返回首页</button>
+      <button type="button" data-action="export-history" id="btn_export"></button>
+      <button class="danger" type="button" data-action="clear-history" id="btn_clear"></button>
+      <button class="gray" type="button" data-action="show-page" data-page="homePage" id="btn_back_home2"></button>
     </div>
   </div>
 
   <div class="page detail-page" id="detailPage">
-    <h2>检测详情</h2>
+    <h2 id="title_detail"></h2>
 
     <div class="detail-summary" id="detailSummary"></div>
 
     <div class="detail-table-wrap" id="detailTableWrap"></div>
 
     <div class="buttons">
-      <button class="wide" type="button" data-action="show-page" data-page="historyPage">返回历史</button>
+      <button class="wide" type="button" data-action="show-page" data-page="historyPage" id="btn_back_history"></button>
     </div>
   </div>
 
   <div class="camera-modal" id="cameraModal" aria-hidden="true">
     <div class="camera-panel">
-      <p class="camera-title">请拍摄照片</p>
+      <p class="camera-title" id="camera_title"></p>
       <div class="camera-view-wrap">
         <div class="camera-view">
           <video id="video" autoplay playsinline></video>
         </div>
       </div>
       <div class="camera-actions">
-        <button type="button" data-action="capture-photo">确认拍摄</button>
-        <button class="danger" type="button" data-action="close-camera">取消</button>
+        <button type="button" data-action="capture-photo" id="btn_confirm_capture"></button>
+        <button class="danger" type="button" data-action="close-camera" id="btn_cancel"></button>
       </div>
     </div>
   </div>
@@ -435,28 +436,340 @@
   <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-card">
       <div class="spinner"></div>
-      <div class="loading-text" id="loadingText">正在识别中...</div>
+      <div class="loading-text" id="loadingText"></div>
     </div>
   </div>
 
   <!-- 全局权限引导浮层 -->
   <div class="permission-overlay" id="globalPermissionOverlay">
     <div class="permission-dialog">
-      <p class="permission-dialog-title" id="permissionTitle">权限被拒绝</p>
+      <p class="permission-dialog-title" id="permissionTitle"></p>
       <div class="permission-dialog-body" id="permissionBody"></div>
       <div class="permission-dialog-actions">
-        <button class="retry" type="button" data-action="retry-permission">重新授权</button>
-        <button class="dismiss" type="button" data-action="close-permission-guide">知道了</button>
+        <button class="retry" type="button" data-action="retry-permission" id="btn_retry_perm"></button>
+        <button class="dismiss" type="button" data-action="close-permission-guide" id="btn_ok_perm"></button>
       </div>
     </div>
   </div>
 
+  <button class="lang-switch" type="button" id="langSwitch"></button>
+
   <script>
     (function() {
+      // ===== 语言检测 =====
+      var lang = "cn";
+      var pathLang = window.location.pathname.replace(/^\/|\/$/g, "");
+      if (pathLang === "en") lang = "en";
+
+      // ===== 中英文字典 =====
+      var i18n = {
+        cn: {
+          title_home: "检测系统",
+          title_detect: "拍照识别",
+          title_history: "检测历史",
+          title_detail: "检测详情",
+          label_time: "当前时间",
+          label_location: "当前位置",
+          label_city: "所在城市",
+          label_preview: "照片预览",
+          label_result: "识别结果",
+          btn_start: "开始检测",
+          btn_history: "检测历史",
+          btn_exit: "退出程序",
+          btn_capture: "拍照",
+          btn_select: "选择图片",
+          btn_save: "保存到本地",
+          btn_upload: "上传并识别",
+          btn_back_home: "返回首页",
+          btn_export: "导出到本地",
+          btn_clear: "清除历史",
+          btn_back_history: "返回历史",
+          camera_title: "请拍摄照片",
+          btn_confirm_capture: "确认拍摄",
+          btn_cancel: "取消",
+          btn_retry_perm: "重新授权",
+          btn_ok_perm: "知道了",
+          loading_default: "正在识别中...",
+          empty_photo: "暂无照片",
+          empty_result: "暂无结果",
+          no_history: "暂无检测历史",
+          latitude_acquiring: "纬度：正在获取...",
+          longitude_acquiring: "经度：正在获取...",
+          city_acquiring: "正在获取城市...",
+          city_resolving: "正在解析城市...",
+          latitude_requesting: "纬度：请求权限中...",
+          longitude_requesting: "经度：请求权限中...",
+          location_waiting: "等待定位成功...",
+          latitude_not_supported: "纬度：浏览器不支持",
+          longitude_not_supported: "经度：浏览器不支持",
+          location_denied: "权限被拒绝",
+          location_unavailable: "无法获取",
+          location_timeout: "定位超时",
+          location_failed: "定位失败",
+          step1_loading: "步骤 1/2：YOLO 检测中...",
+          step2_loading: "步骤 2/2：分类识别中",
+          uploading: "正在上传并识别...",
+          camera_not_supported: "当前浏览器不支持摄像头调用",
+          camera_opening: "正在打开摄像头...",
+          camera_opened: "摄像头已打开，请确认拍摄",
+          camera_not_open: "摄像头未打开",
+          camera_not_ready: "摄像头画面还没准备好",
+          capture_failed: "拍照失败，请重试",
+          capture_success: "拍照成功，点击上传并识别",
+          photo_cleared: "已清空照片，请重新拍照或选择图片",
+          select_image_first: "请选择图片文件",
+          selected_image: "已选择图片：",
+          no_photo: "请先拍照",
+          no_photo_or_select: "请先拍照或选择图片",
+          image_read_failed: "图片读取失败",
+          crop_fetch_failed: "获取裁剪图失败：",
+          yolo_error: "YOLO 服务响应异常：",
+          yolo_failed: "YOLO 检测失败：",
+          recognize_error: "识别服务响应异常：",
+          upload_failed: "上传或识别失败：",
+          detections_label: "检测框：",
+          no_target: "未检测到目标",
+          no_result: "无检测结果",
+          recognize_failed: "识别失败",
+          qr_decode_failed: "二维码解码失败",
+          not_recognized: "未识别",
+          sample_id: "Sample ID",
+          results: "Results",
+          th_sample_id: "Sample ID",
+          th_results: "Results",
+          positive: "positive",
+          negative: "negative",
+          permission_camera_title: "摄像头权限被拒绝",
+          permission_camera_body: "请检查以下事项以确保摄像头正常工作：\n",
+          permission_camera_li1: "操作系统\u201C设置 > 隐私 > 相机\u201D中允许浏览器访问摄像头",
+          permission_camera_li2: "浏览器站点权限：地址栏左侧锁图标 > 网站权限 > 摄像头设为\u201C允许\u201D",
+          permission_camera_li3: "<strong>当前页面未使用 HTTPS</strong>，部分浏览器要求安全连接才能调用摄像头",
+          permission_camera_li4: "确认没有其他应用正在占用摄像头",
+          permission_camera_retry: "\n完成设置后，请点击下方\u201C重新授权\u201D按钮重试。",
+          permission_location_title: "定位权限被拒绝",
+          permission_location_body: "请检查以下事项以确保获取位置：\n",
+          permission_location_li1: "操作系统\u201C设置 > 隐私 > 位置\u201D中允许浏览器获取位置",
+          permission_location_li2: "浏览器站点权限：地址栏左侧锁图标 > 网站权限 > 位置设为\u201C允许\u201D",
+          permission_location_li3: "<strong>当前页面未使用 HTTPS</strong>，部分浏览器要求安全连接才能获取位置",
+          permission_location_li4: "确保设备定位服务已开启（GPS/Wi-Fi）",
+          permission_location_retry: "\n完成设置后，请点击下方\u201C重新授权\u201D按钮重试。",
+          camera_permission_denied: "摄像头权限被拒绝",
+          no_camera_device: "没有检测到摄像头设备",
+          camera_in_use: "摄像头可能被其他程序占用",
+          camera_open_failed: "无法打开摄像头：",
+          confirm_clear: "确定清除所有检测历史？",
+          no_history_records: "暂无历史记录",
+          no_paired_results: "无配对结果",
+          exit_msg: "请手动关闭标签页",
+          locale: "zh-CN"
+        },
+        en: {
+          title_home: "QR-Code-Guided PTS Detection System",
+          title_detect: "Image-Based Recognition",
+          title_history: "Detection History",
+          title_detail: "Detection Details",
+          label_time: "Current Time",
+          label_location: "Current Location",
+          label_city: "City",
+          label_preview: "Image Preview",
+          label_result: "Recognition Results",
+          btn_start: "Start Detection",
+          btn_history: "Detection History",
+          btn_exit: "Exit",
+          btn_capture: "Capture",
+          btn_select: "Select an Image",
+          btn_save: "Save Locally",
+          btn_upload: "Upload and Analyze",
+          btn_back_home: "Back to Home",
+          btn_export: "Export",
+          btn_clear: "Clear History",
+          btn_back_history: "Back to History",
+          camera_title: "Capture Image",
+          btn_confirm_capture: "Confirm Image",
+          btn_cancel: "Cancel",
+          btn_retry_perm: "Retry Permission",
+          btn_ok_perm: "OK",
+          loading_default: "Analyzing...",
+          empty_photo: "No image selected",
+          empty_result: "No results",
+          no_history: "No detection history",
+          latitude_acquiring: "Latitude: acquiring...",
+          longitude_acquiring: "Longitude: acquiring...",
+          city_acquiring: "Acquiring city...",
+          city_resolving: "Resolving city...",
+          latitude_requesting: "Latitude: requesting permission...",
+          longitude_requesting: "Longitude: requesting permission...",
+          location_waiting: "Waiting for location...",
+          latitude_not_supported: "Latitude: not supported by browser",
+          longitude_not_supported: "Longitude: not supported by browser",
+          location_denied: "Permission denied",
+          location_unavailable: "Unavailable",
+          location_timeout: "Location timeout",
+          location_failed: "Location failed",
+          step1_loading: "Step 1/2: YOLO detection in progress...",
+          step2_loading: "Step 2/2: classification in progress",
+          uploading: "Uploading and analyzing...",
+          camera_not_supported: "The current browser does not support camera access.",
+          camera_opening: "Opening camera...",
+          camera_opened: "Camera opened. Please confirm capture.",
+          camera_not_open: "Camera is not open.",
+          camera_not_ready: "Camera preview is not ready yet.",
+          capture_failed: "Capture failed. Please try again.",
+          capture_success: "Image captured. Click \"Upload and Analyze\".",
+          photo_cleared: "Image cleared. Please capture or select a new image.",
+          select_image_first: "Please select an image file.",
+          selected_image: "Selected image: ",
+          no_photo: "Please capture an image first.",
+          no_photo_or_select: "Please capture or select an image first.",
+          image_read_failed: "Failed to read image",
+          crop_fetch_failed: "Failed to retrieve cropped image: ",
+          yolo_error: "YOLO service response error: ",
+          yolo_failed: "YOLO detection failed: ",
+          recognize_error: "Recognition service response error: ",
+          upload_failed: "Upload or recognition failed: ",
+          detections_label: "Detections: ",
+          no_target: "No target detected",
+          no_result: "No detection results",
+          recognize_failed: "Recognition failed",
+          qr_decode_failed: "QR code decoding failed",
+          not_recognized: "Not recognized",
+          sample_id: "Sample ID",
+          results: "Results",
+          th_sample_id: "Sample ID",
+          th_results: "Results",
+          positive: "positive",
+          negative: "negative",
+          permission_camera_title: "Camera Permission Denied",
+          permission_camera_body: "Please check the following items to ensure that the camera works properly:\n",
+          permission_camera_li1: "Allow the browser to access the camera in the operating system settings: Settings > Privacy > Camera",
+          permission_camera_li2: "Browser site permissions: lock icon in the address bar > Site permissions > set Camera to \"Allow\"",
+          permission_camera_li3: "<strong>The current page is not using HTTPS</strong>. Some browsers require a secure connection to access the camera.",
+          permission_camera_li4: "Make sure no other application is using the camera.",
+          permission_camera_retry: "\nAfter updating the settings, click \"Retry Permission\" below.",
+          permission_location_title: "Location Permission Denied",
+          permission_location_body: "Please check the following items to enable location access:\n",
+          permission_location_li1: "Allow the browser to access location in the operating system settings: Settings > Privacy > Location",
+          permission_location_li2: "Browser site permissions: lock icon in the address bar > Site permissions > set Location to \"Allow\"",
+          permission_location_li3: "<strong>The current page is not using HTTPS</strong>. Some browsers require a secure connection to access location.",
+          permission_location_li4: "Make sure device location services are enabled, such as GPS or Wi-Fi positioning.",
+          permission_location_retry: "\nAfter updating the settings, click \"Retry Permission\" below.",
+          camera_permission_denied: "Camera Permission Denied",
+          no_camera_device: "No camera device detected",
+          camera_in_use: "The camera may be in use by another application",
+          camera_open_failed: "Unable to open camera: ",
+          confirm_clear: "Are you sure you want to clear all detection history?",
+          no_history_records: "No history records",
+          no_paired_results: "No paired results",
+          exit_msg: "Please close this tab manually",
+          locale: "en-US"
+        }
+      };
+
+      var t = i18n[lang];
+
+      // ===== 城市中英文映射 =====
+      var cityMap = {
+        "北京市":"Beijing","天津市":"Tianjin","上海市":"Shanghai","重庆市":"Chongqing",
+        "河北省石家庄市":"Shijiazhuang, Hebei","河北省唐山市":"Tangshan, Hebei",
+        "山西省太原市":"Taiyuan, Shanxi","山西省大同市":"Datong, Shanxi",
+        "辽宁省沈阳市":"Shenyang, Liaoning","辽宁省大连市":"Dalian, Liaoning",
+        "吉林省长春市":"Changchun, Jilin","吉林省吉林市":"Jilin, Jilin",
+        "黑龙江省哈尔滨市":"Harbin, Heilongjiang",
+        "江苏省南京市":"Nanjing, Jiangsu","江苏省苏州市":"Suzhou, Jiangsu","江苏省无锡市":"Wuxi, Jiangsu",
+        "浙江省杭州市":"Hangzhou, Zhejiang","浙江省宁波市":"Ningbo, Zhejiang","浙江省温州市":"Wenzhou, Zhejiang",
+        "安徽省合肥市":"Hefei, Anhui",
+        "福建省福州市":"Fuzhou, Fujian","福建省厦门市":"Xiamen, Fujian",
+        "江西省南昌市":"Nanchang, Jiangxi",
+        "山东省济南市":"Jinan, Shandong","山东省青岛市":"Qingdao, Shandong","山东省烟台市":"Yantai, Shandong",
+        "河南省郑州市":"Zhengzhou, Henan","河南省洛阳市":"Luoyang, Henan",
+        "湖北省武汉市":"Wuhan, Hubei","湖北省宜昌市":"Yichang, Hubei",
+        "湖南省长沙市":"Changsha, Hunan",
+        "广东省广州市":"Guangzhou, Guangdong","广东省深圳市":"Shenzhen, Guangdong","广东省东莞市":"Dongguan, Guangdong","广东省佛山市":"Foshan, Guangdong","广东省珠海市":"Zhuhai, Guangdong",
+        "广西壮族自治区南宁市":"Nanning, Guangxi",
+        "海南省海口市":"Haikou, Hainan","海南省三亚市":"Sanya, Hainan",
+        "四川省成都市":"Chengdu, Sichuan",
+        "贵州省贵阳市":"Guiyang, Guizhou",
+        "云南省昆明市":"Kunming, Yunnan",
+        "西藏自治区拉萨市":"Lhasa, Tibet",
+        "陕西省西安市":"Xi'an, Shaanxi",
+        "甘肃省兰州市":"Lanzhou, Gansu",
+        "青海省西宁市":"Xining, Qinghai",
+        "宁夏回族自治区银川市":"Yinchuan, Ningxia",
+        "新疆维吾尔自治区乌鲁木齐市":"Urumqi, Xinjiang",
+        "内蒙古自治区呼和浩特市":"Hohhot, Inner Mongolia","内蒙古自治区包头市":"Baotou, Inner Mongolia",
+        "香港特别行政区":"Hong Kong","澳门特别行政区":"Macao",
+        "台湾省台北市":"Taipei, Taiwan"
+      };
+
+      function translateCity(cnCity) {
+        if (lang !== "en") return cnCity;
+        if (cnCity === "Unknown") return "Unknown";
+        if (cityMap[cnCity]) return cityMap[cnCity];
+        // 尝试去掉省份前缀逐级匹配
+        var parts = cnCity.split(/省|市|自治区|特别行政区|壮族|回族|维吾尔/);
+        for (var i = parts.length - 1; i >= 0; i--) {
+          var frag = parts[i];
+          if (!frag) continue;
+          for (var key in cityMap) {
+            if (key.indexOf(frag) !== -1) return cityMap[key];
+          }
+        }
+        return "Unknown";
+      }
+
+      // ===== 应用语言 =====
+      function applyLang() {
+        document.documentElement.lang = lang === "en" ? "en-US" : "zh-CN";
+        document.title = t.title_home;
+
+        document.getElementById("title_home").innerText = t.title_home;
+        document.getElementById("title_detect").innerText = t.title_detect;
+        document.getElementById("title_history").innerText = t.title_history;
+        document.getElementById("title_detail").innerText = t.title_detail;
+        document.getElementById("label_time").innerText = t.label_time;
+        document.getElementById("label_location").innerText = t.label_location;
+        document.getElementById("label_city").innerText = t.label_city;
+        document.getElementById("label_preview").innerText = t.label_preview;
+        document.getElementById("label_result").innerText = t.label_result;
+        document.getElementById("emptyText").innerText = t.empty_photo;
+        document.getElementById("historyEmpty").innerText = t.no_history;
+        document.getElementById("camera_title").innerText = t.camera_title;
+
+        document.getElementById("btn_start").innerText = t.btn_start;
+        document.getElementById("btn_history").innerText = t.btn_history;
+        document.getElementById("btn_exit").innerText = t.btn_exit;
+        document.getElementById("btn_capture").innerText = t.btn_capture;
+        document.getElementById("btn_select").innerText = t.btn_select;
+        document.getElementById("btn_save").innerText = t.btn_save;
+        document.getElementById("uploadBtn").innerText = t.btn_upload;
+        document.getElementById("btn_back_home").innerText = t.btn_back_home;
+        document.getElementById("btn_export").innerText = t.btn_export;
+        document.getElementById("btn_clear").innerText = t.btn_clear;
+        document.getElementById("btn_back_home2").innerText = t.btn_back_home;
+        document.getElementById("btn_back_history").innerText = t.btn_back_history;
+        document.getElementById("btn_confirm_capture").innerText = t.btn_confirm_capture;
+        document.getElementById("btn_cancel").innerText = t.btn_cancel;
+        document.getElementById("btn_retry_perm").innerText = t.btn_retry_perm;
+        document.getElementById("btn_ok_perm").innerText = t.btn_ok_perm;
+        document.getElementById("loadingText").innerText = t.loading_default;
+        document.getElementById("preview").alt = t.label_preview;
+
+        // 初始定位状态
+        document.getElementById("currentTime").innerText = "";
+        document.getElementById("currentLatitude").innerText = t.latitude_acquiring;
+        document.getElementById("currentLongitude").innerText = t.longitude_acquiring;
+        document.getElementById("currentCity").innerText = t.city_acquiring;
+
+        // 语言切换按钮
+        document.getElementById("langSwitch").innerText = lang === "cn" ? "EN" : "中文";
+      }
+
+      applyLang();
+
       var CONFIG = {
         yoloEndpoint: "/api/yolo-recognize",
         recognizeEndpoint: "/api/recognize",
-        historyKey: "detectHistory",
+        historyKey: "detectHistory_" + lang,
         maxHistoryItems: 20,
         cameraRatio: 3 / 4,
         jpegQuality: 0.95,
@@ -537,20 +850,20 @@
 
       function buildResultTable(pairs, showConfidence) {
         if (!pairs || pairs.length === 0) {
-          return '<div class="result-empty">无检测结果</div>';
+          return '<div class="result-empty">' + escapeHtml(t.no_result) + '</div>';
         }
         var sorted = sortPairs(pairs);
-        var html = '<table class="result-table"><thead><tr><th>Sample ID</th><th>Results</th></tr></thead><tbody>';
+        var html = '<table class="result-table"><thead><tr><th>' + escapeHtml(t.th_sample_id) + '</th><th>' + escapeHtml(t.th_results) + '</th></tr></thead><tbody>';
         sorted.forEach(function(p) {
           var resultHtml = "";
           if (p.recognizeResult && p.recognizeResult.success) {
             resultHtml = clsSpan(p.recognizeResult.predicted_class, p.recognizeResult.confidence, showConfidence);
           } else if (p.recognizeResult) {
-            resultHtml = '<span style="color:#64748b">识别失败</span>';
+            resultHtml = '<span style="color:#64748b">' + escapeHtml(t.recognize_failed) + '</span>';
           } else if (!p.qr_decode_success) {
-            resultHtml = '<span style="color:#64748b">二维码解码失败</span>';
+            resultHtml = '<span style="color:#64748b">' + escapeHtml(t.qr_decode_failed) + '</span>';
           } else {
-            resultHtml = '<span style="color:#64748b">未识别</span>';
+            resultHtml = '<span style="color:#64748b">' + escapeHtml(t.not_recognized) + '</span>';
           }
           html += '<tr><td>' + escapeHtml(p.qr_text) + '</td><td>' + resultHtml + '</td></tr>';
         });
@@ -576,29 +889,29 @@
         var bodyHtml = "";
 
         if (isCamera) {
-          elements.permissionTitle.innerText = "摄像头权限被拒绝";
-          bodyHtml = "请检查以下事项以确保摄像头正常工作：\n";
+          elements.permissionTitle.innerText = t.permission_camera_title;
+          bodyHtml = t.permission_camera_body;
           bodyHtml += "<ul>";
-          bodyHtml += '<li>操作系统\u201C设置 > 隐私 > 相机\u201D中允许浏览器访问摄像头</li>';
-          bodyHtml += '<li>浏览器站点权限：地址栏左侧锁图标 > 网站权限 > 摄像头设为\u201C允许\u201D</li>';
+          bodyHtml += '<li>' + t.permission_camera_li1 + '</li>';
+          bodyHtml += '<li>' + t.permission_camera_li2 + '</li>';
           if (!isHTTPS) {
-            bodyHtml += '<li><strong>当前页面未使用 HTTPS</strong>，部分浏览器要求安全连接才能调用摄像头</li>';
+            bodyHtml += '<li>' + t.permission_camera_li3 + '</li>';
           }
-          bodyHtml += '<li>确认没有其他应用正在占用摄像头</li>';
+          bodyHtml += '<li>' + t.permission_camera_li4 + '</li>';
           bodyHtml += '</ul>';
-          bodyHtml += '\n完成设置后，请点击下方\u201C重新授权\u201D按钮重试。';
+          bodyHtml += t.permission_camera_retry;
         } else {
-          elements.permissionTitle.innerText = "定位权限被拒绝";
-          bodyHtml = "请检查以下事项以确保获取位置：\n";
+          elements.permissionTitle.innerText = t.permission_location_title;
+          bodyHtml = t.permission_location_body;
           bodyHtml += "<ul>";
-          bodyHtml += '<li>操作系统\u201C设置 > 隐私 > 位置\u201D中允许浏览器获取位置</li>';
-          bodyHtml += '<li>浏览器站点权限：地址栏左侧锁图标 > 网站权限 > 位置设为\u201C允许\u201D</li>';
+          bodyHtml += '<li>' + t.permission_location_li1 + '</li>';
+          bodyHtml += '<li>' + t.permission_location_li2 + '</li>';
           if (!isHTTPS) {
-            bodyHtml += '<li><strong>当前页面未使用 HTTPS</strong>，部分浏览器要求安全连接才能获取位置</li>';
+            bodyHtml += '<li>' + t.permission_location_li3 + '</li>';
           }
-          bodyHtml += '<li>确保设备定位服务已开启（GPS/Wi-Fi）</li>';
+          bodyHtml += '<li>' + t.permission_location_li4 + '</li>';
           bodyHtml += '</ul>';
-          bodyHtml += '\n完成设置后，请点击下方\u201C重新授权\u201D按钮重试。';
+          bodyHtml += t.permission_location_retry;
         }
 
         elements.permissionBody.innerHTML = bodyHtml;
@@ -607,7 +920,7 @@
 
       // ------ 时间与定位 ------
       function updateTime() {
-        elements.currentTime.innerText = new Date().toLocaleString("zh-CN", {
+        elements.currentTime.innerText = new Date().toLocaleString(t.locale, {
           year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit"
         });
       }
@@ -619,13 +932,13 @@
       }
 
       function getCurrentLocation() {
-        elements.currentLatitude.innerText = "纬度：请求权限中...";
-        elements.currentLongitude.innerText = "经度：请求权限中...";
-        elements.currentCity.innerText = "等待定位成功...";
+        elements.currentLatitude.innerText = t.latitude_requesting;
+        elements.currentLongitude.innerText = t.longitude_requesting;
+        elements.currentCity.innerText = t.location_waiting;
 
         if (!navigator.geolocation) {
-          elements.currentLatitude.innerText = "纬度：浏览器不支持";
-          elements.currentLongitude.innerText = "经度：浏览器不支持";
+          elements.currentLatitude.innerText = t.latitude_not_supported;
+          elements.currentLongitude.innerText = t.longitude_not_supported;
           elements.currentCity.innerText = "Unknown";
           state.city = "Unknown";
           return;
@@ -634,10 +947,10 @@
         navigator.geolocation.getCurrentPosition(
           handleLocationSuccess,
           function(err) {
-            var messages = { 1:"权限被拒绝", 2:"无法获取", 3:"定位超时" };
-            var msg = messages[err.code] || "定位失败";
-            elements.currentLatitude.innerText = "纬度：" + msg;
-            elements.currentLongitude.innerText = "经度：" + msg;
+            var messages = { 1: t.location_denied, 2: t.location_unavailable, 3: t.location_timeout };
+            var msg = messages[err.code] || t.location_failed;
+            elements.currentLatitude.innerText = (lang === "cn" ? "纬度：" : "Latitude: ") + msg;
+            elements.currentLongitude.innerText = (lang === "cn" ? "经度：" : "Longitude: ") + msg;
             elements.currentCity.innerText = "Unknown";
             state.city = "Unknown";
             if (err.code === 1) {
@@ -654,16 +967,16 @@
         state.latitude = lat;
         state.longitude = lng;
 
-        elements.currentLatitude.innerText = "纬度：" + lat.toFixed(6);
-        elements.currentLongitude.innerText = "经度：" + lng.toFixed(6);
-        elements.currentCity.innerText = "正在解析城市...";
+        elements.currentLatitude.innerText = (lang === "cn" ? "纬度：" : "Latitude: ") + lat.toFixed(6);
+        elements.currentLongitude.innerText = (lang === "cn" ? "经度：" : "Longitude: ") + lng.toFixed(6);
+        elements.currentCity.innerText = t.city_resolving;
 
         try {
           var res = await fetch("/api/reverse-geocode?lat=" + encodeURIComponent(lat) + "&lng=" + encodeURIComponent(lng));
           var data = await res.json();
           if (data.success) {
             state.city = data.address;
-            elements.currentCity.innerText = state.city;
+            elements.currentCity.innerText = translateCity(state.city);
           } else {
             state.city = "Unknown";
             elements.currentCity.innerText = "Unknown";
@@ -679,19 +992,19 @@
       async function openCameraModal() {
         if (state.isCameraOpening) return;
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          elements.resultBox.innerHTML = '<div class="result-empty">当前浏览器不支持摄像头调用</div>';
+          elements.resultBox.innerHTML = '<div class="result-empty">' + escapeHtml(t.camera_not_supported) + '</div>';
           return;
         }
 
         state.isCameraOpening = true;
-        elements.resultBox.innerHTML = '<div class="result-empty">正在打开摄像头...</div>';
+        elements.resultBox.innerHTML = '<div class="result-empty">' + escapeHtml(t.camera_opening) + '</div>';
         closeGlobalPermissionGuide();
         elements.cameraModal.classList.add("show");
         elements.cameraModal.setAttribute("aria-hidden","false");
 
         try {
           await startCamera();
-          elements.resultBox.innerHTML = '<div class="result-empty">摄像头已打开，请确认拍摄</div>';
+          elements.resultBox.innerHTML = '<div class="result-empty">' + escapeHtml(t.camera_opened) + '</div>';
         } catch (err) {
           closeCameraModal();
           handleCameraError(err);
@@ -718,9 +1031,9 @@
       }
 
       function capturePhoto() {
-        if (!state.stream) { alert("摄像头未打开"); return; }
+        if (!state.stream) { alert(t.camera_not_open); return; }
         var w = elements.video.videoWidth, h = elements.video.videoHeight;
-        if (!w || !h) { alert("摄像头画面还没准备好"); return; }
+        if (!w || !h) { alert(t.camera_not_ready); return; }
 
         var crop = getCenteredCrop(w, h, CONFIG.cameraRatio);
         elements.canvas.width = crop.outputWidth;
@@ -728,10 +1041,10 @@
         var ctx = elements.canvas.getContext("2d");
         ctx.drawImage(elements.video, crop.x, crop.y, crop.width, crop.height, 0, 0, crop.outputWidth, crop.outputHeight);
         elements.canvas.toBlob(function(blob) {
-          if (!blob) { elements.resultBox.innerHTML = '<div class="result-empty">拍照失败，请重试</div>'; return; }
+          if (!blob) { elements.resultBox.innerHTML = '<div class="result-empty">' + escapeHtml(t.capture_failed) + '</div>'; return; }
           state.photoBlob = blob;
           updatePreview(blob);
-          elements.resultBox.innerHTML = '<div class="result-empty">拍照成功，点击上传并识别</div>';
+          elements.resultBox.innerHTML = '<div class="result-empty">' + escapeHtml(t.capture_success) + '</div>';
           closeCameraModal();
         }, "image/jpeg", CONFIG.jpegQuality);
       }
@@ -770,7 +1083,7 @@
         elements.preview.removeAttribute("src");
         elements.preview.style.display = "none";
         elements.emptyText.style.display = "inline";
-        elements.resultBox.innerHTML = '<div class="result-empty">已清空照片，请重新拍照或选择图片</div>';
+        elements.resultBox.innerHTML = '<div class="result-empty">' + escapeHtml(t.photo_cleared) + '</div>';
       }
 
       function selectLocalImage() {
@@ -781,18 +1094,18 @@
         var file = e.target.files && e.target.files[0];
         if (!file) return;
         if (!file.type.startsWith("image/")) {
-          alert("请选择图片文件");
+          alert(t.select_image_first);
           return;
         }
         state.photoBlob = file;
         updatePreview(file);
-        elements.resultBox.innerHTML = '<div class="result-empty">已选择图片：' + escapeHtml(file.name) + '</div>';
+        elements.resultBox.innerHTML = '<div class="result-empty">' + escapeHtml(t.selected_image + file.name) + '</div>';
         elements.fileInput.value = "";
       }
 
       // ------ 加载状态 ------
       function showLoading(text) {
-        elements.loadingText.innerText = text || "正在识别中...";
+        elements.loadingText.innerText = text || t.loading_default;
         elements.loadingOverlay.classList.add("show");
         elements.uploadBtn.disabled = true;
       }
@@ -807,7 +1120,7 @@
       }
 
       function savePhotoToLocal() {
-        if (!state.photoBlob) { alert("请先拍照"); return; }
+        if (!state.photoBlob) { alert(t.no_photo); return; }
         var url = URL.createObjectURL(state.photoBlob);
         var a = document.createElement("a");
         a.href = url;
@@ -829,11 +1142,11 @@
 
       // ------ 上传识别 ------
       async function uploadPhoto() {
-        if (!state.photoBlob) { alert("请先拍照或选择图片"); return; }
+        if (!state.photoBlob) { alert(t.no_photo_or_select); return; }
         if (state.isUploading) return;
         state.isUploading = true;
-        showLoading("步骤 1/2：YOLO 检测中...");
-        elements.resultBox.innerHTML = '<div class="result-empty">正在上传并识别...</div>';
+        showLoading(t.step1_loading);
+        elements.resultBox.innerHTML = '<div class="result-empty">' + escapeHtml(t.uploading) + '</div>';
 
         try {
           var base64 = await blobToBase64(state.photoBlob);
@@ -845,24 +1158,24 @@
             body: JSON.stringify({ image: base64 })
           });
 
-          if (!yoloRes.ok) throw new Error("YOLO 服务响应异常：" + yoloRes.status);
+          if (!yoloRes.ok) throw new Error(t.yolo_error + yoloRes.status);
           var yoloData = await yoloRes.json();
 
           if (!yoloData.success) {
-            elements.resultBox.innerHTML = '<div class="result-empty">YOLO 检测失败：' + escapeHtml(yoloData.error || "未知错误") + '</div>';
+            elements.resultBox.innerHTML = '<div class="result-empty">' + escapeHtml(t.yolo_failed) + escapeHtml(yoloData.error || "") + '</div>';
             return;
           }
 
           if (!yoloData.pairs || yoloData.pairs.length === 0) {
-            var msg = yoloData.message || "未检测到目标";
+            var msg = yoloData.message || t.no_target;
             elements.resultBox.innerHTML = '<div class="result-empty">' +
-              '检测框：' + yoloData.total_detections + ' (QR: ' + yoloData.qr_count + ', PTS: ' + yoloData.pts_count + ')<br>' +
+              escapeHtml(t.detections_label) + yoloData.total_detections + ' (QR: ' + yoloData.qr_count + ', PTS: ' + yoloData.pts_count + ')<br>' +
               escapeHtml(msg) + '</div>';
             saveHistory({ yolo: yoloData, pairs: [], city: state.city });
             return;
           }
 
-          updateLoadingText("步骤 2/2：分类识别中 (0/" + yoloData.pairs.length + ")");
+          updateLoadingText(t.step2_loading + " (0/" + yoloData.pairs.length + ")");
 
           // Step 2: 逐个调用 /api/recognize
           for (var i = 0; i < yoloData.pairs.length; i++) {
@@ -870,7 +1183,7 @@
 
             if (!pair.qr_decode_success) continue;
 
-            updateLoadingText("步骤 2/2：分类识别中 (" + (i + 1) + "/" + yoloData.pairs.length + ")");
+            updateLoadingText(t.step2_loading + " (" + (i + 1) + "/" + yoloData.pairs.length + ")");
 
             try {
               var cropBase64 = await fetchCropImage(pair.pts_image_url);
@@ -880,7 +1193,7 @@
                 body: JSON.stringify({ image: cropBase64 })
               });
 
-              if (!recRes.ok) throw new Error("识别服务响应异常：" + recRes.status);
+              if (!recRes.ok) throw new Error(t.recognize_error + recRes.status);
               var recData = await recRes.json();
               pair.recognizeResult = recData;
             } catch (err) {
@@ -894,7 +1207,7 @@
           saveHistory({ yolo: yoloData, pairs: yoloData.pairs, city: state.city });
 
         } catch (err) {
-          elements.resultBox.innerHTML = '<div class="result-empty">上传或识别失败：' + escapeHtml(err.message) + '</div>';
+          elements.resultBox.innerHTML = '<div class="result-empty">' + escapeHtml(t.upload_failed + err.message) + '</div>';
         } finally {
           state.isUploading = false;
           hideLoading();
@@ -905,14 +1218,14 @@
         return new Promise(function(resolve, reject) {
           var reader = new FileReader();
           reader.onload = function() { resolve(reader.result); };
-          reader.onerror = function() { reject(new Error("图片读取失败")); };
+          reader.onerror = function() { reject(new Error(t.image_read_failed)); };
           reader.readAsDataURL(blob);
         });
       }
 
       async function fetchCropImage(url) {
         var res = await fetch(url);
-        if (!res.ok) throw new Error("获取裁剪图失败：" + res.status);
+        if (!res.ok) throw new Error(t.crop_fetch_failed + res.status);
         var blob = await res.blob();
         return blobToBase64(blob);
       }
@@ -926,7 +1239,7 @@
       function saveHistory(data) {
         var arr = getHistory();
         arr.unshift({
-          time: new Date().toLocaleString("zh-CN"),
+          time: new Date().toLocaleString(t.locale),
           result: data,
           city: data.city || state.city || "Unknown"
         });
@@ -945,7 +1258,7 @@
 
           var r = item.result;
           var summaryText = item.time;
-          if (item.city) summaryText += " " + item.city;
+          if (item.city) summaryText += " " + translateCity(item.city);
 
           var subText = "";
           if (r && r.yolo) {
@@ -974,7 +1287,7 @@
 
         var r = item.result;
         var summaryText = item.time;
-        if (item.city) summaryText += " " + item.city;
+        if (item.city) summaryText += " " + translateCity(item.city);
         if (r && r.yolo) {
           summaryText += "\n" + r.yolo.qr_count + " QRcode  " + r.yolo.pts_count + " PTS";
         }
@@ -983,7 +1296,7 @@
         if (r && r.pairs && r.pairs.length > 0) {
           elements.detailTableWrap.innerHTML = buildResultTable(r.pairs, true);
         } else {
-          elements.detailTableWrap.innerHTML = '<div class="result-empty">无检测结果</div>';
+          elements.detailTableWrap.innerHTML = '<div class="result-empty">' + escapeHtml(t.no_result) + '</div>';
         }
 
         showPage("detailPage");
@@ -991,33 +1304,33 @@
 
       function exportHistory() {
         var arr = getHistory();
-        if (arr.length === 0) { alert("暂无历史记录"); return; }
+        if (arr.length === 0) { alert(t.no_history_records); return; }
 
         var lines = [];
         arr.forEach(function(item, idx) {
           var r = item.result;
           lines.push("====== " + (idx + 1) + " ======");
-          lines.push(item.time + (item.city ? " " + item.city : ""));
+          lines.push(item.time + (item.city ? " " + translateCity(item.city) : ""));
 
           if (r && r.yolo) {
             lines.push(r.yolo.qr_count + " QRcode  " + r.yolo.pts_count + " PTS");
             if (r.pairs && r.pairs.length > 0) {
               var sorted = sortPairs(r.pairs);
               lines.push("");
-              lines.push("Sample ID\tResults");
+              lines.push(t.th_sample_id + "\t" + t.th_results);
               sorted.forEach(function(p) {
-                var resultText = "未识别";
+                var resultText = t.not_recognized;
                 if (p.recognizeResult && p.recognizeResult.success) {
                   resultText = p.recognizeResult.predicted_class + " (" + (p.recognizeResult.confidence * 100).toFixed(1) + "%)";
                 } else if (!p.qr_decode_success) {
-                  resultText = "二维码解码失败";
+                  resultText = t.qr_decode_failed;
                 } else if (p.recognizeResult) {
-                  resultText = "识别失败";
+                  resultText = t.recognize_failed;
                 }
                 lines.push(p.qr_text + "\t" + resultText);
               });
             } else {
-              lines.push("无配对结果");
+              lines.push(t.no_paired_results);
             }
           }
           lines.push("");
@@ -1037,24 +1350,24 @@
       }
 
       function clearHistory() {
-        if (!confirm("确定清除所有检测历史？")) return;
+        if (!confirm(t.confirm_clear)) return;
         localStorage.removeItem(CONFIG.historyKey);
         renderHistory();
       }
 
       // ------ 错误处理 ------
       function handleCameraError(err) {
-        console.error("摄像头错误：", err);
+        console.error("Camera error: ", err);
         var msg = "";
         if (err.name === "NotAllowedError") {
-          msg = "摄像头权限被拒绝";
+          msg = t.camera_permission_denied;
           showPermissionGuide("camera");
         } else if (err.name === "NotFoundError") {
-          msg = "没有检测到摄像头设备";
+          msg = t.no_camera_device;
         } else if (err.name === "NotReadableError") {
-          msg = "摄像头可能被其他程序占用";
+          msg = t.camera_in_use;
         } else {
-          msg = "无法打开摄像头：" + err.message;
+          msg = t.camera_open_failed + err.message;
         }
         elements.resultBox.innerHTML = '<div class="result-empty">' + escapeHtml(msg) + '</div>';
       }
@@ -1067,7 +1380,7 @@
 
         if (action === "show-page") showPage(btn.dataset.page);
         else if (action === "show-detail") showDetail(parseInt(btn.dataset.index, 10));
-        else if (action === "exit") { stopCamera(); window.close(); setTimeout(function() { alert("请手动关闭标签页"); }, 300); }
+        else if (action === "exit") { stopCamera(); window.close(); setTimeout(function() { alert(t.exit_msg); }, 300); }
         else if (action === "open-camera") openCameraModal();
         else if (action === "select-local") selectLocalImage();
         else if (action === "reset-photo") resetPhoto();
@@ -1097,6 +1410,12 @@
         elements.fileInput.addEventListener("change", handleFileSelected);
         window.addEventListener("beforeunload", cleanup);
         document.addEventListener("visibilitychange", function() { if (document.hidden) closeCameraModal(); });
+
+        document.getElementById("langSwitch").addEventListener("click", function() {
+          var target = lang === "cn" ? "/en/" : "/cn/";
+          window.location.href = target;
+        });
+
         startClock();
         getCurrentLocation();
         renderHistory();

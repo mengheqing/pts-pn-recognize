@@ -8,7 +8,7 @@ import urllib.request
 import urllib.parse
 import ssl
 
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, redirect
 from recognize import recognize
 from yolo_recognize import init_yolo_model, yolo_recognize, cleanup_temp_crops, TEMP_CROPS_DIR
 
@@ -17,6 +17,16 @@ app = Flask(__name__, static_folder='static', static_url_path='')
 
 @app.route('/')
 def index():
+    return redirect('/cn/')
+
+
+@app.route('/cn/')
+def index_cn():
+    return send_from_directory('static', 'index.html')
+
+
+@app.route('/en/')
+def index_en():
     return send_from_directory('static', 'index.html')
 
 
