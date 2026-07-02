@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>QR-Code-Guided PTS Detection System</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --bg-gradient-start: #e0f2fe;
+      --bg-gradient-end: #f8fafc;
+      --primary: #2563eb;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --gray: #64748b;
+      --shadow-sm: 0 4px 12px rgba(0,0,0,0.04);
+      --shadow-md: 0 8px 24px rgba(0,0,0,0.06);
+      --shadow-lg: 0 20px 40px rgba(0,0,0,0.08);
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
+        "Microsoft YaHei", Arial, sans-serif;
+      background: linear-gradient(145deg, #e0f2fe 0%, #f1f5f9 40%, #f8fafc 100%);
+      color: #0f172a;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+    }
+
+    .page {
+      display: none;
+      width: 100%;
+      max-width: 430px;
+      height: 100dvh;
+      margin: 0 auto;
+      padding: calc(18px + env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom));
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+    }
+
+    .page.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1, h2 {
+      margin: 0;
+      text-align: center;
+      color: #0f172a;
+    }
+
+    h1 { font-size:32px; line-height:42px; font-weight:780; letter-spacing:1px; }
+    h2 { font-size:24px; line-height:32px; font-weight:720; margin-bottom:4px; }
+
+    /* 首页 */
+    .home-page { justify-content:center; gap:28px; }
+
+    .home-info {
+      display:grid; grid-template-columns:max-content minmax(0,1fr); gap:12px;
+      padding:18px; border-radius:28px;
+      background:rgba(255,255,255,0.75); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+      border:1px solid rgba(255,255,255,0.5); box-shadow:var(--shadow-lg);
+    }
+
+    .info-cell {
+      min-height:62px; padding:12px 14px; border-radius:18px;
+      display:flex; align-items:center; justify-content:center; text-align:center;
+      font-size:14px; line-height:20px; word-break:break-word;
+    }
+
+    .info-label {
+      min-width:92px; color:#1e40af; font-weight:700;
+      background:rgba(219,234,254,0.8); border:1px solid rgba(96,165,250,0.4);
+      box-shadow:var(--shadow-sm);
+    }
+
+    .info-value {
+      color:#0f172a; font-weight:650;
+      background:rgba(255,255,255,0.85); border:1px solid rgba(203,213,225,0.6);
+      box-shadow:var(--shadow-sm);
+    }
+
+    .location-lines { display:flex; flex-direction:column; gap:6px; align-items:center; justify-content:center; }
+
+    .home-buttons { display:flex; flex-direction:column; gap:14px; }
+
+    button {
+      height:50px; border:none; border-radius:20px; color:#ffffff;
+      font-size:16px; font-weight:650; cursor:pointer;
+      background:var(--primary); box-shadow:0 8px 20px rgba(37,99,235,0.25);
+      transition:all 0.2s ease;
+    }
+
+    button:active { transform:scale(0.97); opacity:0.9; box-shadow:0 4px 12px rgba(37,99,235,0.18); }
+    button:disabled { cursor:not-allowed; opacity:0.55; transform:none; }
+
+    button.green { background:var(--success); box-shadow:0 8px 20px rgba(22,163,74,0.2); }
+    button.green:active { box-shadow:0 4px 12px rgba(22,163,74,0.15); }
+
+    button.gray { background:var(--gray); box-shadow:0 8px 20px rgba(100,116,139,0.2); }
+    button.gray:active { box-shadow:0 4px 12px rgba(100,116,139,0.15); }
+
+    button.danger { background:var(--danger); box-shadow:0 8px 20px rgba(220,38,38,0.2); }
+    button.danger:active { box-shadow:0 4px 12px rgba(220,38,38,0.15); }
+
+    /* 检测页 */
+    .detect-page { gap:14px; }
+
+    .tip {
+      margin:0; padding:14px 16px; font-size:13px; line-height:21px;
+      color:#92400e; background:rgba(255,251,235,0.9); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+      border:1px solid rgba(251,191,36,0.4); border-radius:20px; text-align:center; box-shadow:var(--shadow-sm);
+    }
+
+    .section-title { margin:0; font-size:15px; font-weight:700; color:#0f172a; }
+
+    .preview-box {
+      width:100%; flex:1; min-height:0; border:none; border-radius:28px; overflow:hidden;
+      background:rgba(255,255,255,0.5); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+      display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-md);
+    }
+
+    .preview-frame {
+      width:100%; height:100%; aspect-ratio:3/4; background:transparent;
+      display:flex; align-items:center; justify-content:center; border-radius:28px; overflow:hidden;
+    }
+
+    #preview { width:100%; height:100%; object-fit:contain; display:none; background:#000; }
+    .empty-text { color:#64748b; font-size:15px; }
+    canvas { display:none; }
+
+    .buttons { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+    .buttons .wide { grid-column:1/-1; }
+    .buttons button, .camera-actions button { height:48px; font-size:15px; }
+
+    /* 结果表格 */
+    #result {
+      min-height:80px; max-height:240px; padding:0; overflow-y:auto;
+      background:rgba(255,255,255,0.8); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+      border:1px solid rgba(147,197,253,0.5); border-radius:20px;
+      box-shadow:var(--shadow-sm);
+    }
+
+    #result:empty::before {
+      content: "No results";
+      display:flex; align-items:center; justify-content:center;
+      height:80px; color:#64748b; font-size:14px;
+    }
+
+    .result-table {
+      width:100%; border-collapse:collapse; font-size:14px;
+    }
+
+    .result-table th {
+      position:sticky; top:0; z-index:1;
+      padding:10px 14px; text-align:left;
+      background:rgba(219,234,254,0.9); color:#1e40af; font-weight:700;
+      border-bottom:1px solid rgba(147,197,253,0.5);
+    }
+
+    .result-table td {
+      padding:8px 14px; border-bottom:1px solid rgba(226,232,240,0.6);
+      color:#0f172a; font-weight:600;
+    }
+
+    .result-table tr:last-child td { border-bottom:none; }
+
+    .cls-negative { color:#2563eb !important; }
+    .cls-positive { color:#dc2626 !important; }
+
+    .result-empty {
+      padding:20px; text-align:center; color:#64748b; font-size:14px;
+    }
+
+    /* 加载遮罩 */
+    .loading-overlay {
+      position:fixed; inset:0; z-index:2000;
+      display:none; align-items:center; justify-content:center;
+      background:rgba(15,23,42,0.45); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    }
+    .loading-overlay.show { display:flex; }
+    .loading-card {
+      display:flex; flex-direction:column; align-items:center; gap:16px;
+      padding:32px 40px; border-radius:24px;
+      background:rgba(255,255,255,0.92); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+      box-shadow:0 20px 60px rgba(15,23,42,0.25);
+    }
+    .spinner {
+      width:40px; height:40px;
+      border:4px solid rgba(37,99,235,0.2); border-top-color:var(--primary);
+      border-radius:50%; animation:spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .loading-text { font-size:14px; color:#1e293b; font-weight:600; text-align:center; }
+
+    /* 全局权限引导浮层 */
+    .permission-overlay {
+      position:fixed; inset:0; z-index:1000;
+      display:none; align-items:center; justify-content:center;
+      padding:calc(18px + env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom));
+      background:rgba(15,23,42,0.55); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+    }
+
+    .permission-overlay.show { display:flex; }
+
+    .permission-dialog {
+      width:100%; max-width:380px;
+      background:rgba(255,255,255,0.92); backdrop-filter:blur(40px); -webkit-backdrop-filter:blur(40px);
+      border-radius:32px; padding:20px; border:1px solid rgba(255,255,255,0.6);
+      box-shadow:0 30px 80px rgba(15,23,42,0.35);
+    }
+
+    .permission-dialog-title {
+      margin:0 0 16px; font-size:20px; font-weight:700; color:#b91c1c; text-align:center;
+    }
+
+    .permission-dialog-body {
+      margin:0 0 16px; font-size:14px; line-height:1.6; color:#1e293b;
+      white-space:pre-wrap; text-align:left;
+    }
+
+    .permission-dialog-body ul {
+      margin:8px 0 0; padding-left:20px; list-style-type:disc;
+    }
+
+    .permission-dialog-actions {
+      display:grid; grid-template-columns:1fr 1fr; gap:10px;
+    }
+
+    .permission-dialog-actions button {
+      height:44px; font-size:14px;
+    }
+
+    .permission-dialog-actions button.retry {
+      background:var(--danger); box-shadow:0 8px 20px rgba(220,38,38,0.2);
+    }
+
+    .permission-dialog-actions button.dismiss {
+      background:var(--gray); box-shadow:0 8px 20px rgba(100,116,139,0.2);
+    }
+
+    /* 相机模态 */
+    .camera-modal {
+      position:fixed; inset:0; z-index:999;
+      display:none; align-items:center; justify-content:center;
+      padding:calc(18px + env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom));
+      background:rgba(15,23,42,0.55); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+    }
+
+    .camera-modal.show { display:flex; }
+
+    .camera-panel {
+      width:100%; max-width:390px;
+      background:rgba(255,255,255,0.92); backdrop-filter:blur(40px); -webkit-backdrop-filter:blur(40px);
+      border-radius:32px; overflow:hidden; padding:20px;
+      border:1px solid rgba(255,255,255,0.6); box-shadow:0 30px 80px rgba(15,23,42,0.35);
+    }
+
+    .camera-title { margin:0 0 16px; color:#0f172a; font-size:20px; font-weight:700; text-align:center; }
+
+    .camera-view-wrap { width:100%; display:flex; justify-content:center; }
+    .camera-view { width:min(100%,340px); aspect-ratio:3/4; background:#000; border-radius:24px; overflow:hidden; border:1px solid rgba(148,163,184,0.5); box-shadow:var(--shadow-md); }
+    #video { width:100%; height:100%; object-fit:cover; display:block; }
+
+    .camera-actions { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px; }
+
+    /* 历史页 */
+    .history-page { gap:18px; }
+
+    .history-list {
+      flex:1; margin:0; padding:0; overflow-y:auto; list-style:none;
+      display:flex; flex-direction:column; gap:12px;
+    }
+
+    .history-item, .blank-box {
+      border:1px solid rgba(148,163,184,0.4); border-radius:24px; color:#334155;
+      background:rgba(255,255,255,0.75); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+      box-shadow:var(--shadow-sm);
+    }
+
+    .history-item {
+      padding:14px; font-size:13px; line-height:20px; color:#1e293b; word-break:break-word;
+      cursor:pointer; transition:all 0.2s ease;
+    }
+    .history-item:active { transform:scale(0.98); opacity:0.9; }
+
+    .history-summary { font-weight:600; color:#0f172a; }
+    .history-sub { color:#64748b; font-size:12px; margin-top:4px; }
+
+    .blank-box { flex:1; display:flex; align-items:center; justify-content:center; font-size:15px; color:#64748b; }
+
+    .history-actions { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+    .history-actions button { height:44px; font-size:14px; }
+
+    /* 历史详情页 */
+    .detail-page { gap:14px; }
+
+    .detail-summary {
+      padding:14px; border-radius:20px; font-size:14px; line-height:22px;
+      background:rgba(219,234,254,0.6); border:1px solid rgba(147,197,253,0.5);
+      color:#1e40af; font-weight:600;
+    }
+
+    .detail-table-wrap {
+      flex:1; min-height:0; overflow-y:auto; border-radius:20px;
+      background:rgba(255,255,255,0.8); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+      border:1px solid rgba(147,197,253,0.5); box-shadow:var(--shadow-sm);
+    }
+
+    @media screen and (max-height:760px) {
+      .page { padding-top:calc(12px + env(safe-area-inset-top)); padding-bottom:calc(12px + env(safe-area-inset-bottom)); }
+      .tip { display:none; }
+      .preview-box { min-height:0; }
+      .camera-view { width:min(100%,280px); }
+      button { height:42px; font-size:14px; }
+      .buttons button, .camera-actions button { height:42px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page home-page active" id="homePage">
+    <h1>QR-Code-Guided PTS Detection System</h1>
+
+    <div class="home-info">
+      <div class="info-cell info-label">Current Time</div>
+      <div class="info-cell info-value" id="currentTime">Loading...</div>
+
+      <div class="info-cell info-label">Current Location</div>
+      <div class="info-cell info-value">
+        <div class="location-lines">
+          <div id="currentLatitude">Latitude: acquiring...</div>
+          <div id="currentLongitude">Longitude: acquiring...</div>
+        </div>
+      </div>
+
+      <div class="info-cell info-label">City</div>
+      <div class="info-cell info-value" id="currentCity">Acquiring city...</div>
+    </div>
+
+    <div class="home-buttons">
+      <button class="green" type="button" data-action="show-page" data-page="detectPage">Start Detection</button>
+      <button type="button" data-action="show-page" data-page="historyPage">Detection History</button>
+      <button class="danger" type="button" data-action="exit">Exit</button>
+    </div>
+  </div>
+
+  <div class="page detect-page" id="detectPage">
+    <h2>Image-Based Recognition</h2>
+
+    <p class="tip">
+      Tap "Capture" to open the camera, or tap "Select Image" to choose a local image<br>
+      Tap "Upload and Analyze" to start detection and classification.
+    </p>
+
+    <p class="section-title">Image Preview</p>
+
+    <div class="preview-box">
+      <div class="preview-frame">
+        <span class="empty-text" id="emptyText">No image selected</span>
+        <img id="preview" alt="Image preview" />
+      </div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <div class="buttons">
+      <button type="button" data-action="open-camera">Capture</button>
+      <button class="gray" type="button" data-action="select-local">Select an Image</button>
+      <button class="green" type="button" data-action="save-photo">Save Locally</button>
+      <button class="green" type="button" data-action="upload-photo" id="uploadBtn">Upload and Analyze</button>
+      <button class="danger wide" type="button" data-action="show-page" data-page="homePage">Back to Home</button>
+    </div>
+    <input type="file" id="fileInput" accept="image/*" style="display:none" />
+
+    <p class="section-title">Recognition Results</p>
+    <div id="result"></div>
+  </div>
+
+  <div class="page history-page" id="historyPage">
+    <h2>Detection History</h2>
+
+    <ul class="history-list" id="historyList"></ul>
+    <div class="blank-box" id="historyEmpty">No detection history</div>
+
+    <div class="history-actions">
+      <button type="button" data-action="export-history">Export</button>
+      <button class="danger" type="button" data-action="clear-history">Clear History</button>
+      <button class="gray" type="button" data-action="show-page" data-page="homePage">Back to Home</button>
+    </div>
+  </div>
+
+  <div class="page detail-page" id="detailPage">
+    <h2>Detection Details</h2>
+
+    <div class="detail-summary" id="detailSummary"></div>
+
+    <div class="detail-table-wrap" id="detailTableWrap"></div>
+
+    <div class="buttons">
+      <button class="wide" type="button" data-action="show-page" data-page="historyPage">Back to History</button>
+    </div>
+  </div>
+
+  <div class="camera-modal" id="cameraModal" aria-hidden="true">
+    <div class="camera-panel">
+      <p class="camera-title">Capture Image</p>
+      <div class="camera-view-wrap">
+        <div class="camera-view">
+          <video id="video" autoplay playsinline></video>
+        </div>
+      </div>
+      <div class="camera-actions">
+        <button type="button" data-action="capture-photo">Confirm Image</button>
+        <button class="danger" type="button" data-action="close-camera">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 加载遮罩 -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-card">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loadingText">Analyzing...</div>
+    </div>
+  </div>
+
+  <!-- 全局权限引导浮层 -->
+  <div class="permission-overlay" id="globalPermissionOverlay">
+    <div class="permission-dialog">
+      <p class="permission-dialog-title" id="permissionTitle">Permission Denied</p>
+      <div class="permission-dialog-body" id="permissionBody"></div>
+      <div class="permission-dialog-actions">
+        <button class="retry" type="button" data-action="retry-permission">Retry Permission</button>
+        <button class="dismiss" type="button" data-action="close-permission-guide">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var CONFIG = {
+        yoloEndpoint: "/api/yolo-recognize",
+        recognizeEndpoint: "/api/recognize",
+        historyKey: "detectHistory",
+        maxHistoryItems: 20,
+        cameraRatio: 3 / 4,
+        jpegQuality: 0.95,
+        localFilePrefix: "photo+"
+      };
+
+      var elements = {
+        pages: document.querySelectorAll(".page"),
+        video: document.getElementById("video"),
+        canvas: document.getElementById("canvas"),
+        preview: document.getElementById("preview"),
+        emptyText: document.getElementById("emptyText"),
+        resultBox: document.getElementById("result"),
+        cameraModal: document.getElementById("cameraModal"),
+        currentTime: document.getElementById("currentTime"),
+        currentLatitude: document.getElementById("currentLatitude"),
+        currentLongitude: document.getElementById("currentLongitude"),
+        currentCity: document.getElementById("currentCity"),
+        historyList: document.getElementById("historyList"),
+        historyEmpty: document.getElementById("historyEmpty"),
+        globalOverlay: document.getElementById("globalPermissionOverlay"),
+        permissionTitle: document.getElementById("permissionTitle"),
+        permissionBody: document.getElementById("permissionBody"),
+        fileInput: document.getElementById("fileInput"),
+        uploadBtn: document.getElementById("uploadBtn"),
+        loadingOverlay: document.getElementById("loadingOverlay"),
+        loadingText: document.getElementById("loadingText"),
+        detailSummary: document.getElementById("detailSummary"),
+        detailTableWrap: document.getElementById("detailTableWrap")
+      };
+
+      var state = {
+        currentPageId: "homePage",
+        stream: null,
+        photoBlob: null,
+        previewUrl: null,
+        latitude: null,
+        longitude: null,
+        city: "",
+        timeTimer: null,
+        isCameraOpening: false,
+        isUploading: false,
+        permissionGuideType: null
+      };
+
+      // ------ 页面切换 ------
+      function showPage(pageId) {
+        var nextPage = document.getElementById(pageId);
+        if (!nextPage) return;
+        closeCameraModal();
+        closeGlobalPermissionGuide();
+
+        elements.pages.forEach(function(p) { p.classList.remove("active"); });
+        nextPage.classList.add("active");
+        state.currentPageId = pageId;
+
+        if (pageId === "historyPage") renderHistory();
+      }
+
+      // ------ 结果表格渲染 ------
+      function extractSampleNo(text) {
+        var m = text.match(/No\.\s*(\d+)/i);
+        return m ? parseInt(m[1], 10) : 9999;
+      }
+
+      function sortPairs(pairs) {
+        return pairs.slice().sort(function(a, b) {
+          return extractSampleNo(a.qr_text) - extractSampleNo(b.qr_text);
+        });
+      }
+
+      function clsSpan(cls, confidence, showConfidence) {
+        var clsClass = cls === "positive" ? "cls-positive" : "cls-negative";
+        var text = cls;
+        if (showConfidence) text += ' (' + (confidence * 100).toFixed(1) + '%)';
+        return '<span class="' + clsClass + '">' + cls + '</span>';
+      }
+
+      function buildResultTable(pairs, showConfidence) {
+        if (!pairs || pairs.length === 0) {
+          return '<div class="result-empty">No detection results</div>';
+        }
+        var sorted = sortPairs(pairs);
+        var html = '<table class="result-table"><thead><tr><th>Sample ID</th><th>Results</th></tr></thead><tbody>';
+        sorted.forEach(function(p) {
+          var resultHtml = "";
+          if (p.recognizeResult && p.recognizeResult.success) {
+            resultHtml = clsSpan(p.recognizeResult.predicted_class, p.recognizeResult.confidence, showConfidence);
+          } else if (p.recognizeResult) {
+            resultHtml = '<span style="color:#64748b">Recognition failed</span>';
+          } else if (!p.qr_decode_success) {
+            resultHtml = '<span style="color:#64748b">QR code decoding failed</span>';
+          } else {
+            resultHtml = '<span style="color:#64748b">Not recognized</span>';
+          }
+          html += '<tr><td>' + escapeHtml(p.qr_text) + '</td><td>' + resultHtml + '</td></tr>';
+        });
+        html += '</tbody></table>';
+        return html;
+      }
+
+      function escapeHtml(s) {
+        return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      }
+
+      // ------ 全局权限引导 ------
+      function closeGlobalPermissionGuide() {
+        elements.globalOverlay.classList.remove("show");
+        state.permissionGuideType = null;
+      }
+
+      function showPermissionGuide(type) {
+        state.permissionGuideType = type;
+        var isCamera = (type === "camera");
+        var isHTTPS = window.location.protocol === "https:";
+
+        var bodyHtml = "";
+
+        if (isCamera) {
+          elements.permissionTitle.innerText = "Camera Permission Denied";
+          bodyHtml = "Please check the following items to ensure that the camera works properly:\n";
+          bodyHtml += "<ul>";
+          bodyHtml += '<li>Allow the browser to access the camera in the operating system settings: Settings > Privacy > Camera</li>';
+          bodyHtml += '<li>Browser site permissions: lock icon in the address bar > Site permissions > set Camera to "Allow"</li>';
+          if (!isHTTPS) {
+            bodyHtml += '<li><strong>The current page is not using HTTPS</strong>. Some browsers require a secure connection to access the camera.</li>';
+          }
+          bodyHtml += '<li>Make sure no other application is using the camera.</li>';
+          bodyHtml += '</ul>';
+          bodyHtml += '\nAfter updating the settings, click "Retry Permission" below.';
+        } else {
+          elements.permissionTitle.innerText = "Location Permission Denied";
+          bodyHtml = "Please check the following items to enable location access:\n";
+          bodyHtml += "<ul>";
+          bodyHtml += '<li>Allow the browser to access location in the operating system settings: Settings > Privacy > Location</li>';
+          bodyHtml += '<li>Browser site permissions: lock icon in the address bar > Site permissions > set Location to "Allow"</li>';
+          if (!isHTTPS) {
+            bodyHtml += '<li><strong>The current page is not using HTTPS</strong>. Some browsers require a secure connection to access location.</li>';
+          }
+          bodyHtml += '<li>Make sure device location services are enabled, such as GPS or Wi-Fi positioning.</li>';
+          bodyHtml += '</ul>';
+          bodyHtml += '\nAfter updating the settings, click "Retry Permission" below.';
+        }
+
+        elements.permissionBody.innerHTML = bodyHtml;
+        elements.globalOverlay.classList.add("show");
+      }
+
+      // ------ 时间与定位 ------
+      function updateTime() {
+        elements.currentTime.innerText = new Date().toLocaleString("en-US", {
+          year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit"
+        });
+      }
+
+      function startClock() {
+        updateTime();
+        clearInterval(state.timeTimer);
+        state.timeTimer = setInterval(updateTime, 1000);
+      }
+
+      function getCurrentLocation() {
+        elements.currentLatitude.innerText = "Latitude: requesting permission...";
+        elements.currentLongitude.innerText = "Longitude: requesting permission...";
+        elements.currentCity.innerText = "Waiting for location...";
+
+        if (!navigator.geolocation) {
+          elements.currentLatitude.innerText = "Latitude: not supported by browser";
+          elements.currentLongitude.innerText = "Longitude: not supported by browser";
+          elements.currentCity.innerText = "Unknown";
+          state.city = "Unknown";
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          handleLocationSuccess,
+          function(err) {
+            var messages = { 1:"Permission denied", 2:"Unavailable", 3:"Location timeout" };
+            var msg = messages[err.code] || "Location failed";
+            elements.currentLatitude.innerText = "Latitude: " + msg;
+            elements.currentLongitude.innerText = "Longitude: " + msg;
+            elements.currentCity.innerText = "Unknown";
+            state.city = "Unknown";
+            if (err.code === 1) {
+              showPermissionGuide("location");
+            }
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+        );
+      }
+
+      async function handleLocationSuccess(position) {
+        var lat = position.coords.latitude;
+        var lng = position.coords.longitude;
+        state.latitude = lat;
+        state.longitude = lng;
+
+        elements.currentLatitude.innerText = "Latitude: " + lat.toFixed(6);
+        elements.currentLongitude.innerText = "Longitude: " + lng.toFixed(6);
+        elements.currentCity.innerText = "Resolving city...";
+
+        try {
+          var res = await fetch("/api/reverse-geocode?lat=" + encodeURIComponent(lat) + "&lng=" + encodeURIComponent(lng));
+          var data = await res.json();
+          if (data.success) {
+            state.city = data.address;
+            elements.currentCity.innerText = state.city;
+          } else {
+            state.city = "Unknown";
+            elements.currentCity.innerText = "Unknown";
+          }
+        } catch (e) {
+          console.error(e);
+          state.city = "Unknown";
+          elements.currentCity.innerText = "Unknown";
+        }
+      }
+
+      // ------ 摄像头 ------
+      async function openCameraModal() {
+        if (state.isCameraOpening) return;
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          elements.resultBox.innerHTML = '<div class="result-empty">The current browser does not support camera access.</div>';
+          return;
+        }
+
+        state.isCameraOpening = true;
+        elements.resultBox.innerHTML = '<div class="result-empty">Opening camera...</div>';
+        closeGlobalPermissionGuide();
+        elements.cameraModal.classList.add("show");
+        elements.cameraModal.setAttribute("aria-hidden","false");
+
+        try {
+          await startCamera();
+          elements.resultBox.innerHTML = '<div class="result-empty">Camera opened. Please confirm capture.</div>';
+        } catch (err) {
+          closeCameraModal();
+          handleCameraError(err);
+        } finally {
+          state.isCameraOpening = false;
+        }
+      }
+
+      async function startCamera() {
+        stopCamera();
+        state.stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: "environment",
+            width: { ideal: 3024 },
+            height: { ideal: 4032 },
+            aspectRatio: { ideal: CONFIG.cameraRatio }
+          },
+          audio: false
+        });
+        elements.video.srcObject = state.stream;
+        await new Promise(function(resolve) {
+          elements.video.onloadedmetadata = function() { elements.video.play(); resolve(); };
+        });
+      }
+
+      function capturePhoto() {
+        if (!state.stream) { alert("Camera is not open."); return; }
+        var w = elements.video.videoWidth, h = elements.video.videoHeight;
+        if (!w || !h) { alert("Camera preview is not ready yet."); return; }
+
+        var crop = getCenteredCrop(w, h, CONFIG.cameraRatio);
+        elements.canvas.width = crop.outputWidth;
+        elements.canvas.height = crop.outputHeight;
+        var ctx = elements.canvas.getContext("2d");
+        ctx.drawImage(elements.video, crop.x, crop.y, crop.width, crop.height, 0, 0, crop.outputWidth, crop.outputHeight);
+        elements.canvas.toBlob(function(blob) {
+          if (!blob) { elements.resultBox.innerHTML = '<div class="result-empty">Capture failed. Please try again.</div>'; return; }
+          state.photoBlob = blob;
+          updatePreview(blob);
+          elements.resultBox.innerHTML = '<div class="result-empty">Image captured. Click "Upload and Analyze".</div>';
+          closeCameraModal();
+        }, "image/jpeg", CONFIG.jpegQuality);
+      }
+
+      function getCenteredCrop(sw, sh, ratio) {
+        var x=0, y=0, w=sw, h=sh;
+        if (sw/sh > ratio) { w = sh*ratio; x = (sw-w)/2; }
+        else if (sw/sh < ratio) { h = sw/ratio; y = (sh-h)/2; }
+        return { x:x, y:y, width:w, height:h, outputWidth:Math.round(w), outputHeight:Math.round(h) };
+      }
+
+      function updatePreview(blob) {
+        if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
+        state.previewUrl = URL.createObjectURL(blob);
+        elements.preview.src = state.previewUrl;
+        elements.preview.style.display = "block";
+        elements.emptyText.style.display = "none";
+      }
+
+      function closeCameraModal() {
+        stopCamera();
+        elements.cameraModal.classList.remove("show");
+        elements.cameraModal.setAttribute("aria-hidden","true");
+      }
+
+      function stopCamera() {
+        if (!state.stream) return;
+        state.stream.getTracks().forEach(function(t) { t.stop(); });
+        elements.video.srcObject = null;
+        state.stream = null;
+      }
+
+      function resetPhoto() {
+        state.photoBlob = null;
+        if (state.previewUrl) { URL.revokeObjectURL(state.previewUrl); state.previewUrl = null; }
+        elements.preview.removeAttribute("src");
+        elements.preview.style.display = "none";
+        elements.emptyText.style.display = "inline";
+        elements.resultBox.innerHTML = '<div class="result-empty">Image cleared. Please capture or select a new image.</div>';
+      }
+
+      function selectLocalImage() {
+        elements.fileInput.click();
+      }
+
+      function handleFileSelected(e) {
+        var file = e.target.files && e.target.files[0];
+        if (!file) return;
+        if (!file.type.startsWith("image/")) {
+          alert("Please select an image file.");
+          return;
+        }
+        state.photoBlob = file;
+        updatePreview(file);
+        elements.resultBox.innerHTML = '<div class="result-empty">Selected image:' + escapeHtml(file.name) + '</div>';
+        elements.fileInput.value = "";
+      }
+
+      // ------ 加载状态 ------
+      function showLoading(text) {
+        elements.loadingText.innerText = text || "Analyzing...";
+        elements.loadingOverlay.classList.add("show");
+        elements.uploadBtn.disabled = true;
+      }
+
+      function updateLoadingText(text) {
+        elements.loadingText.innerText = text;
+      }
+
+      function hideLoading() {
+        elements.loadingOverlay.classList.remove("show");
+        elements.uploadBtn.disabled = false;
+      }
+
+      function savePhotoToLocal() {
+        if (!state.photoBlob) { alert("Please capture an image first."); return; }
+        var url = URL.createObjectURL(state.photoBlob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = createPhotoFileName();
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+      }
+
+      function createPhotoFileName() {
+        var now = new Date();
+        var stamp = now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()) + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
+        return CONFIG.localFilePrefix + stamp + "+" + getCoordInt(state.longitude) + "+" + getCoordInt(state.latitude) + ".jpg";
+      }
+
+      function pad(n) { return String(n).padStart(2,"0"); }
+      function getCoordInt(v) { return (typeof v === "number" && !Number.isNaN(v)) ? String(Math.trunc(v)) : "unknown"; }
+
+      // ------ 上传识别 ------
+      async function uploadPhoto() {
+        if (!state.photoBlob) { alert("Please capture or select an image first."); return; }
+        if (state.isUploading) return;
+        state.isUploading = true;
+        showLoading("Step 1/2: YOLO detection in progress...");
+        elements.resultBox.innerHTML = '<div class="result-empty">Uploading and analyzing...</div>';
+
+        try {
+          var base64 = await blobToBase64(state.photoBlob);
+
+          // Step 1: YOLO 检测
+          var yoloRes = await fetch(CONFIG.yoloEndpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ image: base64 })
+          });
+
+          if (!yoloRes.ok) throw new Error("YOLO service response error: " + yoloRes.status);
+          var yoloData = await yoloRes.json();
+
+          if (!yoloData.success) {
+            elements.resultBox.innerHTML = '<div class="result-empty">YOLO detection failed: ' + escapeHtml(yoloData.error || "Unknown error") + '</div>';
+            return;
+          }
+
+          if (!yoloData.pairs || yoloData.pairs.length === 0) {
+            var msg = yoloData.message || "No target detected";
+            elements.resultBox.innerHTML = '<div class="result-empty">' +
+              'Detections: ' + yoloData.total_detections + ' (QR: ' + yoloData.qr_count + ', PTS: ' + yoloData.pts_count + ')<br>' +
+              escapeHtml(msg) + '</div>';
+            saveHistory({ yolo: yoloData, pairs: [], city: state.city });
+            return;
+          }
+
+          updateLoadingText("Step 2/2: classification in progress... (0/" + yoloData.pairs.length + ")");
+
+          // Step 2: 逐个调用 /api/recognize
+          for (var i = 0; i < yoloData.pairs.length; i++) {
+            var pair = yoloData.pairs[i];
+
+            if (!pair.qr_decode_success) continue;
+
+            updateLoadingText("Step 2/2: classification in progress (" + (i + 1) + "/" + yoloData.pairs.length + ")");
+
+            try {
+              var cropBase64 = await fetchCropImage(pair.pts_image_url);
+              var recRes = await fetch(CONFIG.recognizeEndpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ image: cropBase64 })
+              });
+
+              if (!recRes.ok) throw new Error("Recognition service response error: " + recRes.status);
+              var recData = await recRes.json();
+              pair.recognizeResult = recData;
+            } catch (err) {
+              pair.recognizeResult = { success: false, error: err.message };
+            }
+          }
+
+          // 渲染排序后的结果表格
+          elements.resultBox.innerHTML = buildResultTable(yoloData.pairs, false);
+
+          saveHistory({ yolo: yoloData, pairs: yoloData.pairs, city: state.city });
+
+        } catch (err) {
+          elements.resultBox.innerHTML = '<div class="result-empty">Upload or recognition failed: ' + escapeHtml(err.message) + '</div>';
+        } finally {
+          state.isUploading = false;
+          hideLoading();
+        }
+      }
+
+      function blobToBase64(blob) {
+        return new Promise(function(resolve, reject) {
+          var reader = new FileReader();
+          reader.onload = function() { resolve(reader.result); };
+          reader.onerror = function() { reject(new Error("Failed to read image")); };
+          reader.readAsDataURL(blob);
+        });
+      }
+
+      async function fetchCropImage(url) {
+        var res = await fetch(url);
+        if (!res.ok) throw new Error("Failed to retrieve cropped image: " + res.status);
+        var blob = await res.blob();
+        return blobToBase64(blob);
+      }
+
+      // ------ 历史记录 ------
+      function getHistory() {
+        try { return JSON.parse(localStorage.getItem(CONFIG.historyKey) || "[]"); }
+        catch (e) { return []; }
+      }
+
+      function saveHistory(data) {
+        var arr = getHistory();
+        arr.unshift({
+          time: new Date().toLocaleString("en-US"),
+          result: data,
+          city: data.city || state.city || "Unknown"
+        });
+        localStorage.setItem(CONFIG.historyKey, JSON.stringify(arr.slice(0, CONFIG.maxHistoryItems)));
+      }
+
+      function renderHistory() {
+        var arr = getHistory();
+        elements.historyList.innerHTML = "";
+        elements.historyEmpty.style.display = arr.length ? "none" : "flex";
+        arr.forEach(function(item, idx) {
+          var li = document.createElement("li");
+          li.className = "history-item";
+          li.setAttribute("data-action", "show-detail");
+          li.setAttribute("data-index", idx);
+
+          var r = item.result;
+          var summaryText = item.time;
+          if (item.city) summaryText += " " + item.city;
+
+          var subText = "";
+          if (r && r.yolo) {
+            subText = r.yolo.qr_count + " QRcode  " + r.yolo.pts_count + " PTS";
+            if (r.pairs && r.pairs.length > 0) {
+              var posCount = 0, negCount = 0;
+              r.pairs.forEach(function(p) {
+                if (p.recognizeResult && p.recognizeResult.success) {
+                  if (p.recognizeResult.predicted_class === "positive") posCount++;
+                  else negCount++;
+                }
+              });
+              if (posCount || negCount) subText += "  |  positive: " + posCount + "  negative: " + negCount;
+            }
+          }
+
+          li.innerHTML = '<div class="history-summary">' + escapeHtml(summaryText) + '</div><div class="history-sub">' + escapeHtml(subText) + '</div>';
+          elements.historyList.appendChild(li);
+        });
+      }
+
+      function showDetail(idx) {
+        var arr = getHistory();
+        var item = arr[idx];
+        if (!item) return;
+
+        var r = item.result;
+        var summaryText = item.time;
+        if (item.city) summaryText += " " + item.city;
+        if (r && r.yolo) {
+          summaryText += "\n" + r.yolo.qr_count + " QRcode  " + r.yolo.pts_count + " PTS";
+        }
+
+        elements.detailSummary.innerText = summaryText;
+        if (r && r.pairs && r.pairs.length > 0) {
+          elements.detailTableWrap.innerHTML = buildResultTable(r.pairs, true);
+        } else {
+          elements.detailTableWrap.innerHTML = '<div class="result-empty">No detection results</div>';
+        }
+
+        showPage("detailPage");
+      }
+
+      function exportHistory() {
+        var arr = getHistory();
+        if (arr.length === 0) { alert("No history records"); return; }
+
+        var lines = [];
+        arr.forEach(function(item, idx) {
+          var r = item.result;
+          lines.push("====== " + (idx + 1) + " ======");
+          lines.push(item.time + (item.city ? " " + item.city : ""));
+
+          if (r && r.yolo) {
+            lines.push(r.yolo.qr_count + " QRcode  " + r.yolo.pts_count + " PTS");
+            if (r.pairs && r.pairs.length > 0) {
+              var sorted = sortPairs(r.pairs);
+              lines.push("");
+              lines.push("Sample ID\tResults");
+              sorted.forEach(function(p) {
+                var resultText = "Not recognized";
+                if (p.recognizeResult && p.recognizeResult.success) {
+                  resultText = p.recognizeResult.predicted_class + " (" + (p.recognizeResult.confidence * 100).toFixed(1) + "%)";
+                } else if (!p.qr_decode_success) {
+                  resultText = "QR code decoding failed";
+                } else if (p.recognizeResult) {
+                  resultText = "Recognition failed";
+                }
+                lines.push(p.qr_text + "\t" + resultText);
+              });
+            } else {
+              lines.push("No paired results");
+            }
+          }
+          lines.push("");
+        });
+
+        var text = lines.join("\n");
+        var blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        var now = new Date();
+        a.download = "detect_history_" + now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()) + ".txt";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+      }
+
+      function clearHistory() {
+        if (!confirm("Are you sure you want to clear all detection history?")) return;
+        localStorage.removeItem(CONFIG.historyKey);
+        renderHistory();
+      }
+
+      // ------ 错误处理 ------
+      function handleCameraError(err) {
+        console.error("Camera error: ", err);
+        var msg = "";
+        if (err.name === "NotAllowedError") {
+          msg = "Camera Permission Denied";
+          showPermissionGuide("camera");
+        } else if (err.name === "NotFoundError") {
+          msg = "No camera device detected";
+        } else if (err.name === "NotReadableError") {
+          msg = "The camera may be in use by another application";
+        } else {
+          msg = "Unable to open camera: " + err.message;
+        }
+        elements.resultBox.innerHTML = '<div class="result-empty">' + escapeHtml(msg) + '</div>';
+      }
+
+      // ------ 事件处理 ------
+      function handleAction(e) {
+        var btn = e.target.closest("[data-action]");
+        if (!btn) return;
+        var action = btn.dataset.action;
+
+        if (action === "show-page") showPage(btn.dataset.page);
+        else if (action === "show-detail") showDetail(parseInt(btn.dataset.index, 10));
+        else if (action === "exit") { stopCamera(); window.close(); setTimeout(function() { alert("Please close this tab manually"); }, 300); }
+        else if (action === "open-camera") openCameraModal();
+        else if (action === "select-local") selectLocalImage();
+        else if (action === "reset-photo") resetPhoto();
+        else if (action === "save-photo") savePhotoToLocal();
+        else if (action === "upload-photo") uploadPhoto();
+        else if (action === "capture-photo") capturePhoto();
+        else if (action === "close-camera") closeCameraModal();
+        else if (action === "export-history") exportHistory();
+        else if (action === "clear-history") clearHistory();
+        else if (action === "retry-permission") {
+          closeGlobalPermissionGuide();
+          if (state.permissionGuideType === "camera") openCameraModal();
+          else if (state.permissionGuideType === "location") getCurrentLocation();
+        } else if (action === "close-permission-guide") {
+          closeGlobalPermissionGuide();
+        }
+      }
+
+      function cleanup() {
+        stopCamera();
+        if (state.previewUrl) { URL.revokeObjectURL(state.previewUrl); state.previewUrl = null; }
+        clearInterval(state.timeTimer);
+      }
+
+      function init() {
+        document.addEventListener("click", handleAction);
+        elements.fileInput.addEventListener("change", handleFileSelected);
+        window.addEventListener("beforeunload", cleanup);
+        document.addEventListener("visibilitychange", function() { if (document.hidden) closeCameraModal(); });
+        startClock();
+        getCurrentLocation();
+        renderHistory();
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
